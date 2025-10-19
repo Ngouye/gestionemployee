@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+    <div class="dashboard-header">
+        <div class="header-content">
+            <h1 class="dashboard-title">
+                <i class="fas fa-chart-line"></i>
+                Tableau de bord - Employés
+            </h1>
+            <p class="dashboard-subtitle">Gérez efficacement votre équipe</p>
+        </div>
+        
+        <div class="header-actions">
+            <a class="btn-primary" href="{% url 'employee_create' %}">
+                <i class="fas fa-user-plus"></i>
+                Ajouter un employé
+            </a>
+        </div>
+    </div>
+
+    <div class="dashboard-stats">
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ employees|length }}</h3>
+                <p>Employés {{ query|yesno:"filtrés,total" }}</p>
+            </div>
+            {% if query %}
+                <small class="stat-note">Résultat de la recherche.</small>
+            {% endif %}
+        </div>
+        
+        <div class="stat-card payroll">
+            <div class="stat-icon salary">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ total_payroll|floatformat:0 }} FCFA</h3>
+                <p>Masse salariale</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div class="table-header">
+            <h3>Liste des employés</h3>
+            
+            <div class="table-actions">
+                <form method="GET" action="{% url 'employee_list' %}" class="search-form-inline">
+                    <input 
+                        type="text" 
+                        name="q" 
+                        placeholder="Rechercher par Nom, Email ou Poste..." 
+                        class="search-input"
+                        value="{{ query|default:'' }}"
+                    >
+                    <button type="submit" class="search-btn-icon" title="Rechercher">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    {% if query %}
+                        <a href="{% url 'employee_list' %}" class="clear-search-btn" title="Annuler la recherche">
+                            <i class="fas fa-times-circle"></i>
+                        </a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="employee-table" id="employeeTable">
+                <thead>
+                    <tr>
+                        <th data-sort="name">
+                            <span>Nom</span>
+                            <i class="fas fa-sort"></i>
+                        </th>
+                        <th data-sort="email">
+                            <span>Email</span>
+                            <i class="fas fa-sort"></i>
+                        </th>
+                        <th data-sort="position">
+                            <span>Poste</span>
+                            <i class="fas fa-sort"></i>
+                        </th>
+                        <th data-sort="salary">
+                            <span>Salaire</span>
+                            <i class="fas fa-sort"></i>
+                        </th>
+                        <th data-sort="hire_date">
+                            <span>Date d'embauche</span>
+                            <i class="fas fa-sort"></i>
+                        </th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in employees %}
+                    <tr class="employee-row">
+                        <td>
+                            <div class="employee-info">
+                                <div class="avatar">
+                                    {{ employee.name|slice:":1"|upper }}
+                                </div>
+                                <span class="name">{{ employee.name }}</span>
+                            </div>
+                        </td>
+                        <td class="email-cell">
+                            <i class="fas fa-envelope"></i>
+                            {{ employee.email }}
+                        </td>
+                        <td>
+                            <span class="position-badge">{{ employee.position }}</span>
+                        </td>
+                        <td class="salary-cell">
+                            <strong>{{ employee.salary|floatformat:0 }}</strong> FCFA
+                        </td>
+                        <td class="date-cell">
+                            <i class="fas fa-calendar"></i>
+                            {{ employee.hire_date|date:"d M Y" }}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'employee_update' pk=employee.id %}" class="action-btn edit" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'employee_delete' pk=employee.id %}" class="action-btn delete" title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                                <a href="#" class="action-btn view" title="Voir détails">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="no-data">
+                            <div class="empty-state">
+                                <i class="fas fa-users-slash"></i>
+                                {% if query %}
+                                    <h4>Aucun employé ne correspond à votre recherche ("{{ query }}")</h4>
+                                {% else %}
+                                    <h4>Aucun employé enregistré</h4>
+                                    <p>Commencez par ajouter votre premier employé</p>
+                                {% endif %}
+                                <a href="{% url 'employee_create' %}" class="btn-primary">
+                                    <i class="fas fa-user-plus"></i>
+                                    Ajouter un employé
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock content %} 
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

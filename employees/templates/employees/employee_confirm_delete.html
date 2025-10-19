@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="delete-container">
+    <div class="delete-card">
+        <div class="delete-header">
+            <div class="delete-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="delete-title">
+                <h1>Confirmer la suppression</h1>
+                <p>Action irréversible</p>
+            </div>
+        </div>
+
+        <div class="delete-content">
+            <div class="employee-info-preview">
+                <div class="employee-avatar-large">
+                    {{ object.name|slice:":1"|upper }}
+                </div>
+                <div class="employee-details">
+                    <h3>{{ object.name }}</h3>
+                    <div class="employee-meta">
+                        <span class="meta-item">
+                            <i class="fas fa-envelope"></i>
+                            {{ object.email }}
+                        </span>
+                        <span class="meta-item">
+                            <i class="fas fa-briefcase"></i>
+                            {{ object.position }}
+                        </span>
+                        <span class="meta-item">
+                            <i class="fas fa-id-card"></i>
+                            ID: {{ object.pk }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="warning-section">
+                <div class="warning-header">
+                    <i class="fas fa-radiation"></i>
+                    <h4>Attention - Action critique</h4>
+                </div>
+                <ul class="warning-list">
+                    <li>
+                        <i class="fas fa-times-circle"></i>
+                        <span>Toutes les données de cet employé seront <strong>définitivement supprimées</strong></span>
+                    </li>
+                    <li>
+                        <i class="fas fa-ban"></i>
+                        <span>Cette action <strong>ne peut pas être annulée</strong></span>
+                    </li>
+                    <li>
+                        <i class="fas fa-history"></i>
+                        <span>Aucune sauvegarde automatique n'est disponible</span>
+                    </li>
+                </ul>
+            </div>
+
+            <form method="post" class="delete-form">
+                {% csrf_token %}
+                
+                <div class="confirmation-check">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="confirmDelete" required>
+                        <span class="checkmark"></span>
+                        Je comprends les conséquences et souhaite procéder à la suppression
+                    </label>
+                </div>
+
+                <div class="delete-actions">
+                    <button type="submit" class="btn-danger" id="deleteButton" disabled>
+                        <i class="fas fa-trash"></i>
+                        Supprimer définitivement
+                    </button>
+                    
+                    <a href="{% url 'employee_list' %}" class="btn-secondary">
+                        <i class="fas fa-times"></i>
+                        Annuler et retourner
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/delete.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/delete.js' %}"></script>
+{% endblock %}

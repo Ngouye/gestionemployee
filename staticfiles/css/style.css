@@ -1,0 +1,473 @@
+/* --- Base Styles et Typographie --- */
+
+:root {
+    /* Variables de Couleurs Fantastiques */
+    --primary-color: #4a90e2;      /* Bleu Saphir */
+    --primary-dark: #357ae8;       /* Bleu Saphir plus foncé */
+    --secondary-color: #6c757d;    /* Gris classique */
+    --bg-light: #f4f7f9;           /* Arrière-plan très clair, légèrement bleu-gris */
+    --text-dark: #2c3e50;          /* Gris Anthracite pour le texte */
+    --border-color: #e0e6ed;
+    --success-color: #2ecc71;      /* Vert Émeraude */
+    --error-color: #e74c3c;        /* Rouge Carmin */
+    --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.08); /* Ombre douce */
+    --shadow-deep: 0 10px 30px rgba(0, 0, 0, 0.15); /* Ombre profonde pour les éléments actifs */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--text-dark);
+    background-color: var(--bg-light);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+h1, h2, h3 {
+    margin-bottom: 0.75rem;
+    color: var(--text-dark);
+    font-weight: 700;
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+/* --- Header (Barre supérieure) --- */
+
+.topbar {
+    background: linear-gradient(90deg, #ffffff, #f9f9f9);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-light);
+    z-index: 10;
+}
+
+.topbar h1 {
+    font-size: 1.6rem;
+    color: var(--primary-color);
+    margin: 0;
+    font-weight: 800;
+}
+
+.topbar nav a {
+    margin-left: 1.8rem;
+    font-weight: 600;
+    padding: 0.5rem 0;
+    border-bottom: 3px solid transparent;
+}
+
+.topbar nav a:hover {
+    color: var(--primary-dark);
+    text-decoration: none;
+    border-bottom: 3px solid var(--primary-color);
+}
+
+/* --- Contenu Principal et Footer --- */
+
+.container {
+    flex-grow: 1;
+    width: 90%;
+    max-width: 1300px;
+    margin: 2.5rem auto;
+    padding: 2rem;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: var(--shadow-deep);
+}
+
+.footer {
+    padding: 1.2rem;
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+    background-color: #ffffff;
+    color: var(--secondary-color);
+    font-size: 0.85rem;
+    font-weight: 400;
+}
+
+/* --- MESSAGES (Django messages) --- */
+
+.messages {
+    list-style: none;
+    margin-bottom: 2rem;
+    padding: 0;
+}
+
+.messages .message {
+    padding: 1.2rem;
+    margin-bottom: 0.75rem;
+    border-radius: 6px;
+    font-weight: 600;
+    border-left: 6px solid;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.messages .success {
+    background-color: #e8f9ee;
+    color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.messages .error, .messages .danger {
+    background-color: #fcecec;
+    color: var(--error-color);
+    border-color: var(--error-color);
+}
+
+.messages .info {
+    background-color: #eaf3fd;
+    color: var(--primary-dark);
+    border-color: var(--primary-color);
+}
+
+/* --- CARTES ET FORMULAIRES (Login/Create/Update) --- */
+
+.card {
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 450px; /* Légèrement élargi pour plus de lisibilité des formulaires */
+    margin: 3rem auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card h2 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+}
+
+/* Styles des labels et wrappers */
+form p {
+    margin-bottom: 1rem;
+}
+
+form label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+/* Styles pour tous les types de champs (fusion de tous les inputs) */
+form input[type="text"],
+form input[type="password"],
+form input[type="email"],
+form input[type="date"], 
+form input[type="number"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+form input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2); /* Ombre de focus subtile */
+    outline: none;
+}
+
+/* --- Boutons d'Action Principale (Sauvegarder, Ajouter) --- */
+
+.btn-primary {
+    display: inline-block;
+    padding: 0.8rem 1.5rem;
+    background-color: var(--success-color);
+    color: white !important;
+    text-decoration: none;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+}
+
+.btn-primary:hover {
+    background-color: #27ae60;
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+
+/* --- Boutons Secondaires (Annuler) --- */
+
+.btn-secondary {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    text-align: center;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: var(--secondary-color);
+    color: white !important;
+    border: 1px solid var(--secondary-color);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    text-decoration: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* --- FORMULAIRE : Boutons alignés (Sauvegarder/Annuler) --- */
+
+.form-actions {
+    display: flex; 
+    gap: 15px; 
+    margin-top: 1.5rem;
+}
+
+/* Le bouton principal dans un formulaire (Enregistrer/Se connecter) */
+.form-submit-btn {
+    /* Style de base hérité de .btn-primary ou du style initial de .card button[type="submit"] */
+    padding: 0.75rem; /* Ajustement pour correspondre à btn-secondary */
+    background-color: var(--success-color); 
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+}
+
+/* Égalité de taille dans les actions de formulaire */
+.form-actions .form-submit-btn,
+.form-actions .btn-secondary {
+    flex-basis: 50%; 
+    flex-grow: 1;    
+    text-align: center; 
+    margin-top: 0; 
+}
+
+
+/* --- TABLEAUX (employee_list) --- */
+
+.table-responsive {
+    overflow-x: auto;
+    margin-top: 1.5rem;
+}
+
+.employee-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
+    font-size: 0.95rem;
+    box-shadow: var(--shadow-light);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* En-tête (thead) */
+.employee-table thead th {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 1rem 1.5rem; /* Augmente le padding pour l'alignement */
+    text-align: left;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-right: 1px solid rgba(255, 255, 255, 0.2); /* Séparateur vertical */
+}
+
+/* Coins arrondis de l'en-tête */
+.employee-table thead tr th:first-child {
+    border-top-left-radius: 8px;
+}
+.employee-table thead tr th:last-child {
+    border-top-right-radius: 8px;
+    border-right: none; /* Supprime le séparateur de droite sur le dernier en-tête */
+}
+
+/* Corps du tableau (tbody) */
+.employee-table tbody tr {
+    transition: background-color 0.3s ease;
+}
+
+/* Alternance de couleurs (Striping) */
+.employee-table tbody tr:nth-child(even) {
+    background-color: var(--bg-light);
+}
+.employee-table tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+/* Effet de survol fantastique */
+.employee-table tbody tr:hover {
+    background-color: #e0f0ff;
+    box-shadow: 0 4px 10px rgba(74, 144, 226, 0.15);
+    transform: translateY(-2px);
+}
+.employee-table tbody tr:hover td {
+    border-bottom: 1px solid #e0f0ff; /* Assure la fluidité du survol */
+}
+
+
+/* Cellules de Données (Séparation des champs) */
+.employee-table tbody td {
+    padding: 1rem 1.5rem; /* Espacement aéré */
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color); /* Séparateur vertical des champs */
+    vertical-align: middle;
+}
+
+.employee-table tbody tr:last-child td {
+    border-bottom: none;
+}
+.employee-table tbody td:last-child {
+    border-right: none; /* Supprime le séparateur de droite sur la dernière colonne */
+    text-align: center;
+    white-space: nowrap;
+    padding: 1rem 1rem; 
+}
+
+
+/* --- Boutons d'Action de Ligne (Modifier/Supprimer) --- */
+
+.employee-table .action-btn {
+    margin-right: 0.2rem;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.85rem;
+}
+
+.employee-table .action-btn.edit {
+    background-color: #f39c12;
+    color: white;
+}
+.employee-table .action-btn.edit:hover {
+    background-color: #e67e22;
+}
+
+.employee-table .action-btn.delete {
+    background-color: var(--error-color);
+    color: white;
+}
+.employee-table .action-btn.delete:hover {
+    background-color: #c0392b;
+}
+
+
+/* --- Détails de l'Employé (employee_detail) --- */
+
+.detail-list {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-light);
+    padding: 1.5rem;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px dashed #cfd8e3;
+}
+
+.detail-list .detail-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    flex-basis: 40%;
+}
+
+.detail-value {
+    font-weight: 500;
+    color: var(--primary-dark);
+    text-align: right;
+    flex-basis: 60%;
+}
+
+.detail-value.salary {
+    font-weight: 700;
+    color: var(--success-color);
+}
+
+.action-bar {
+    display: flex;
+    justify-content: flex-start;
+    gap: 15px;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.action-bar .btn-primary,
+.action-bar .btn-secondary {
+    flex-grow: 0;
+    width: auto;
+    text-align: center;
+}
+
+
+/* --- Style Alerte de Suppression --- */
+.warning-text {
+    color: var(--error-color); /* Utilise la couleur rouge */
+    font-weight: 600;
+    margin-top: 1rem;
+    padding: 10px;
+    border: 1px solid var(--error-color);
+    border-radius: 4px;
+    background-color: #fcecec; /* Léger fond rouge pâle */
+}
+
+
+
+/* --- Style pour le Bouton de Déconnexion dans la barre de navigation --- */
+.nav-link-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    
+    /* Reprendre les styles du lien <a> */
+    margin-left: 1.8rem;
+    font-weight: 600;
+    padding: 0.5rem 0;
+    border-bottom: 3px solid transparent;
+    
+    /* Reprendre les couleurs */
+    color: var(--primary-color);
+    font-family: inherit;
+    font-size: inherit;
+    transition: all 0.3s ease;
+}
+
+.nav-link-button:hover {
+    color: var(--primary-dark);
+    border-bottom: 3px solid var(--primary-color);
+}
+
+

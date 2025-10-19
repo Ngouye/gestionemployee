@@ -1,0 +1,146 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Espace Congés</title>
+    <!-- Chargement de Tailwind CSS pour le style (via CDN pour la démo) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#4f46e5',
+                        'secondary': '#6366f1',
+                        'success': '#10b981',
+                        'danger': '#ef4444',
+                        'warning': '#f59e0b',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Styles simples sans @apply (compatible sans pipeline Tailwind) */
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .btn {
+            padding: .5rem 1rem;
+            font-weight: 600;
+            color: white;
+            border-radius: .5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,.1);
+            transition: box-shadow .15s ease, transform .08s ease;
+        }
+        .btn-primary { background-color: #4f46e5; }
+        .btn-primary:hover { background-color: #6366f1; }
+        .card {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(15,23,42,0.06);
+        }
+        .status-pill { padding: .25rem .6rem; border-radius: 999px; font-weight:700; font-size:.75rem; }
+        .status-approved { background: rgba(16,185,129,0.12); color: #059669; }
+        .status-rejected { background: rgba(239,68,68,0.08); color: #dc2626; }
+        .status-pending { background: rgba(245,158,11,0.08); color: #b45309; }
+        .debug-errors { white-space: pre-wrap; color: #b91c1c; }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto space-y-8">
+        <header class="text-center py-6 bg-white rounded-xl shadow-lg">
+            <h1 class="text-4xl font-extrabold text-primary">Espace Employé - Demandes de Congé</h1>
+            <p class="mt-2 text-lg text-gray-600">
+                Bienvenue, <span class="font-bold text-gray-800">{{ user.username }}</span>.
+                {% if is_admin %}
+                    <a href="{% url 'admin_dashboard' %}" class="ml-4 text-warning hover:text-orange-700 font-bold" aria-label="Aller au tableau de bord admin">Aller au Tableau de Bord Admin</a>
+                {% endif %}
+            </p>
+        </header>
+
+        <!-- Messages Django (Success, Error, Warning) -->
+        {% if messages %}
+            <div class="space-y-3">
+                {% for message in messages %}
+                    <div class="p-4 rounded-lg font-medium shadow-md 
+                        {% if 'success' in message.tags %}bg-success/10 text-success border border-success
+                        {% elif 'warning' in message.tags %}bg-warning/10 text-warning border border-warning
+                        {% elif 'error' in message.tags %}bg-danger/10 text-danger border border-danger
+                        {% else %}bg-primary/10 text-primary border border-primary
+                        {% endif %}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- VUE EMPLOYÉ -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- 1. Formulaire de Demande -->
+            <div class="card lg:col-span-1 h-fit" aria-labelledby="form-title">
+                <h2 id="form-title" class="text-2xl font-bold mb-4 text-primary border-b pb-2">Soumettre une Demande</h2>
+                <form method="post" action="" class="space-y-4" novalidate>
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="space-y-1">
+                            <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <p class="text-xs text-gray-500">{{ field.help_text }}</p>
+                            {% endif %}
+                            {% if field.errors %}
+                                <p class="text-xs text-danger">{{ field.errors|striptags }}</p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary w-full" aria-label="Envoyer la demande">Envoyer la Demande</button>
+                </form>
+            </div>
+
+            <!-- 2. Historique des Demandes -->
+            <div class="card lg:col-span-2">
+                <h2 class="text-2xl font-bold mb-4 text-primary border-b pb-2">Statut de mes Demandes ({{ employee_requests|length }})</h2>
+                <div class="space-y-4">
+                    {% if employee_requests %}
+                        {% for request in employee_requests %}
+                            {% with status=request.get_status_display %}
+                            {% comment %} Utiliser la valeur affichée pour le test (mise en minuscule pour robustesse) {% endcomment %}
+                            {% if status|lower == 'approved' %}
+                                {% set_cls = "status-approved" %}
+                            {% elif status|lower == 'rejected' %}
+                                {% set_cls = "status-rejected" %}
+                            {% else %}
+                                {% set_cls = "status-pending" %}
+                            {% endif %}
+                            <div class="p-4 border rounded-lg shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0"
+                                 aria-label="Demande de congé">
+                                <div class="flex-grow">
+                                    <p class="text-md font-semibold text-gray-800">
+                                        {{ request.start_date|date:"d M Y" }} au {{ request.end_date|date:"d M Y" }}
+                                    </p>
+                                    <p class="text-sm text-gray-600 truncate max-w-xs">Raison: {{ request.reason|default:"-"|truncatechars:100 }}</p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <span class="status-pill {{ set_cls }}">
+                                        {{ status }}
+                                    </span>
+                                </div>
+                            </div>
+                            {% endwith %}
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-gray-500">Aucune demande soumise pour le moment.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
