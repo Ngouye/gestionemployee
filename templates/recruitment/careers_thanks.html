@@ -1,0 +1,17 @@
+{% extends 'recruitment/public_base.html' %}
+
+{% block title %}Merci{% endblock %}
+
+{% block public_content %}
+<main class="container py-5">
+  <div class="card mx-auto" style="max-width:560px">
+    <div class="card-body p-5 text-center">
+      <i class="bi bi-check-circle display-4 text-success"></i>
+      <h1 class="h3 fw-bold mt-3">Merci pour votre candidature !</h1>
+      {% include 'partials/messages.html' %}
+      <p class="text-body-secondary">Notre équipe RH l'étudiera avec attention et reviendra vers vous rapidement.</p>
+      <a class="btn btn-outline-primary" href="{% url 'recruitment:careers_list' %}">Voir les autres offres</a>
+    </div>
+  </div>
+</main>
+{% endblock %}

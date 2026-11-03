@@ -1,0 +1,17 @@
+<li>
+  {% with e=node.employee %}
+  <div class="org-node">
+    <span class="avatar avatar-sm">{% if e.photo %}<img src="{% url 'employees:photo' e.pk %}" alt="" loading="lazy">{% else %}{{ e.full_name|initials }}{% endif %}</span>
+    <span class="min-w-0">
+      <span class="fw-semibold d-block">{{ e.full_name }}</span>
+      <span class="small text-body-secondary d-block">{{ e.position|default:"—" }}{% if e.department %} · {{ e.department }}{% endif %}</span>
+    </span>
+    {% if node.children %}<span class="badge rounded-pill bg-primary-subtle text-primary-emphasis ms-auto" title="Collaborateurs directs">{{ node.children|length }}</span>{% endif %}
+  </div>
+  {% endwith %}
+  {% if node.children %}
+  <ul>
+    {% for node in node.children %}{% include 'employees/_org_node.html' %}{% endfor %}
+  </ul>
+  {% endif %}
+</li>

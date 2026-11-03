@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ application.full_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav aria-label="Fil d'Ariane"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{% url 'recruitment:job_detail' application.job.pk %}">{{ application.job }}</a></li><li class="breadcrumb-item active">{{ application.full_name }}</li></ol></nav>
+    <h1 class="page-title"><span class="avatar">{{ application.full_name|initials }}</span> {{ application.full_name }} {{ application.stage|status_badge:application.get_stage_display }}</h1>
+    <p class="page-subtitle">Candidature reçue le {{ application.created_at|date:"d/m/Y" }} via {{ application.get_source_display|lower }}</p>
+  </div>
+  <div class="page-actions">
+    {% if application.stage == 'HIRED' and not application.hired_employee %}
+      <a class="btn btn-success" href="{% url 'employees:create' %}?candidature={{ application.pk }}"><i class="bi bi-person-check"></i> Créer la fiche employé</a>
+    {% elif application.hired_employee %}
+      <a class="btn btn-outline-success" href="{% url 'employees:detail' application.hired_employee.pk %}"><i class="bi bi-person-badge"></i> Voir la fiche employé</a>
+    {% endif %}
+    <a class="btn btn-outline-primary" href="{% url 'recruitment:application_update' application.pk %}"><i class="bi bi-pencil"></i> Modifier</a>
+    <a class="btn btn-outline-danger" href="{% url 'recruitment:application_delete' application.pk %}" title="Supprimer"><i class="bi bi-trash"></i></a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card mb-4">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-signpost-split"></i> Étape du processus</h2></div>
+      <div class="card-body">
+        <form method="post" action="{% url 'recruitment:application_move' application.pk %}" class="d-flex flex-wrap gap-2">
+          {% csrf_token %}
+          {% for value, label in stages %}
+            <button class="btn btn-sm {% if value == application.stage %}btn-primary{% else %}btn-outline-secondary{% endif %}" name="stage" value="{{ value }}" type="submit">{{ label }}</button>
+          {% endfor %}
+        </form>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-camera-video"></i> Entretiens</h2></div>
+      <div class="list-group list-group-flush">
+        {% for i in interviews %}
+          <div class="list-group-item">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div>
+                <div class="fw-semibold">{{ i.scheduled_at|date:"l j F Y à H:i"|capfirst }} <span class="small text-body-secondary">({{ i.duration_minutes }} min · {{ i.get_mode_display }})</span></div>
+                <div class="small text-body-secondary">Intervieweur : {{ i.interviewer.display_name|default:"—" }}{% if i.location %} · {{ i.location }}{% endif %}</div>
+                {% if i.feedback %}<div class="small mt-2">{{ i.feedback|linebreaksbr }}</div>{% endif %}
+              </div>
+              <div class="text-end text-nowrap">
+                {{ i.status|status_badge:i.get_status_display }}
+                {% if i.rating %}<div class="stars small">{% for n in "12345" %}{% if forloop.counter <= i.rating %}★{% else %}☆{% endif %}{% endfor %}</div>{% endif %}
+                <div class="mt-1 d-flex gap-1 justify-content-end">
+                  <a class="btn btn-sm btn-outline-primary" href="{% url 'recruitment:interview_feedback' i.pk %}" title="Modifier / compte rendu"><i class="bi bi-pencil"></i></a>
+                  <form method="post" action="{% url 'recruitment:interview_delete' i.pk %}" data-confirm="Supprimer cet entretien ?">{% csrf_token %}<button class="btn btn-sm btn-outline-danger" type="submit" title="Supprimer"><i class="bi bi-trash"></i></button></form>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% empty %}<div class="empty-state py-4"><i class="bi bi-calendar-x"></i>Aucun entretien planifié.</div>{% endfor %}
+      </div>
+      <div class="card-body border-top">
+        <h3 class="h6 fw-semibold">Planifier un entretien</h3>
+        <form method="post" action="{% url 'recruitment:interview_create' application.pk %}" novalidate>
+          {% csrf_token %}
+          {% with form=interview_form %}{% include 'includes/form_fields.html' %}{% endwith %}
+          <div class="form-actions"><button class="btn btn-primary" type="submit"><i class="bi bi-calendar-plus"></i> Planifier</button></div>
+        </form>
+      </div>
+    </div>
+
+    {% if application.cover_letter %}
+    <div class="card"><div class="card-header"><h2 class="card-title"><i class="bi bi-envelope-paper"></i> Lettre de motivation</h2></div><div class="card-body">{{ application.cover_letter|linebreaks }}</div></div>
+    {% endif %}
+  </div>
+  <div class="col-lg-4">
+    <div class="card mb-3">
+      <div class="card-body">
+        <dl class="kv">
+          <dt>E-mail</dt><dd><a href="mailto:{{ application.email }}">{{ application.email }}</a></dd>
+          <dt>Téléphone</dt><dd>{{ application.phone|default:"—" }}</dd>
+          <dt>Offre</dt><dd><a href="{% url 'recruitment:job_detail' application.job.pk %}">{{ application.job }}</a></dd>
+          <dt>Évaluation</dt><dd>{% if application.rating %}<span class="stars">{% for n in "12345" %}{% if forloop.counter <= application.rating %}★{% else %}☆{% endif %}{% endfor %}</span>{% else %}—{% endif %}</dd>
+          <dt>CV</dt><dd>{% if application.resume %}<a href="{% url 'recruitment:application_resume' application.pk %}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-person"></i> Consulter le CV</a>{% else %}—{% endif %}</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-sticky"></i> Notes internes</h2></div>
+      <div class="card-body small">{{ application.notes|default:"Aucune note."|linebreaksbr }}</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

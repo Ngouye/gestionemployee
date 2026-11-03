@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Annonces{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-megaphone"></i> Annonces</h1>
+    <p class="page-subtitle">Actualités et informations internes de {{ company.name }}.</p>
+  </div>
+  {% if user.is_hr %}<div class="page-actions"><a class="btn btn-primary" href="{% url 'core:announcement_create' %}"><i class="bi bi-plus-lg"></i> Publier une annonce</a></div>{% endif %}
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-xl-8">
+    {% for a in announcements %}
+      <article class="card mb-3">
+        <div class="card-body p-4">
+          <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+            {% if a.is_pinned %}<span class="badge bg-danger-subtle text-danger-emphasis"><i class="bi bi-pin-angle-fill"></i> Épinglée</span>{% endif %}
+            {{ a.category|status_badge:a.get_category_display }}
+            {% if a.department %}<span class="badge bg-secondary-subtle text-secondary-emphasis">{{ a.department }}</span>{% endif %}
+            <span class="small text-body-secondary ms-auto">{{ a.publish_at|date:"d F Y" }}{% if a.author %} · {{ a.author.display_name }}{% endif %}</span>
+          </div>
+          <h2 class="h5 fw-bold">{{ a.title }}</h2>
+          <div class="text-body">{{ a.content|linebreaks }}</div>
+        </div>
+      </article>
+    {% empty %}
+      <div class="card"><div class="empty-state"><i class="bi bi-megaphone"></i>Aucune annonce publiée.</div></div>
+    {% endfor %}
+    {% if page_obj.paginator.num_pages > 1 %}<div class="card">{% include 'partials/pagination.html' %}</div>{% endif %}
+  </div>
+</div>
+{% endblock %}

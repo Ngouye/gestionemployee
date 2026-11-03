@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Demande de congé{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-calendar2-week"></i> Demande de congé</h1>
+    <p class="page-subtitle">{{ leave.employee }} · déposée le {{ leave.created_at|date:"d/m/Y à H:i" }}</p>
+  </div>
+  <div class="page-actions">
+    {% if can_cancel %}
+    <form method="post" action="{% url 'leaves:cancel' leave.pk %}" data-confirm="Annuler cette demande ?">
+      {% csrf_token %}<button class="btn btn-outline-danger" type="submit"><i class="bi bi-x-circle"></i> Annuler la demande</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <div class="small text-body-secondary">Type</div>
+            <div class="fs-5 fw-bold"><span class="color-swatch me-1" style="background:{{ leave.leave_type.color }}"></span>{{ leave.leave_type }}</div>
+          </div>
+          {{ leave.status|status_badge:leave.get_status_display }}
+        </div>
+        <dl class="kv">
+          <dt>Employé</dt><dd>{{ leave.employee }} ({{ leave.employee.employee_id }})</dd>
+          <dt>Département</dt><dd>{{ leave.employee.department|default:"—" }}</dd>
+          <dt>Du</dt><dd>{{ leave.start_date|date:"l j F Y"|capfirst }}</dd>
+          <dt>Au</dt><dd>{{ leave.end_date|date:"l j F Y"|capfirst }}</dd>
+          <dt>Durée</dt><dd>{{ leave.days|days }} ouvré(s){% if leave.half_day %} — demi-journée{% endif %}</dd>
+          <dt>Motif</dt><dd>{{ leave.reason|default:"—"|linebreaksbr }}</dd>
+          <dt>Justificatif</dt><dd>{% if leave.attachment %}<a href="{% url 'leaves:attachment' leave.pk %}" target="_blank" rel="noopener"><i class="bi bi-paperclip"></i> Consulter</a>{% else %}—{% endif %}</dd>
+          {% if leave.reviewed_by %}
+          <dt>Traitée par</dt><dd>{{ leave.reviewed_by.display_name }} le {{ leave.reviewed_at|date:"d/m/Y H:i" }}</dd>
+          <dt>Commentaire</dt><dd>{{ leave.review_comment|default:"—" }}</dd>
+          {% endif %}
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  {% if can_review %}
+  <div class="col-lg-5" id="decision">
+    <div class="card border-primary-subtle">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-check2-square"></i> Décision</h2></div>
+      <div class="card-body">
+        {% if remaining is not None %}
+          <div class="alert {% if remaining >= leave.days %}alert-success{% else %}alert-danger{% endif %} small">
+            Solde disponible (hors cette demande) : <strong>{{ remaining|days }}</strong> pour {{ leave.days|days }} demandé(s).
+          </div>
+        {% endif %}
+        {% if overlapping_team %}
+          <div class="alert alert-warning small"><i class="bi bi-people"></i> Déjà absents dans le département à cette date :
+            {% for o in overlapping_team %}{{ o.employee }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>
+        {% endif %}
+        <form method="post" action="{% url 'leaves:decide' leave.pk %}">
+          {% csrf_token %}
+          <label class="form-label" for="comment">Commentaire <span class="text-body-secondary small">(obligatoire en cas de refus)</span></label>
+          <textarea class="form-control mb-3" id="comment" name="comment" rows="3"></textarea>
+          <div class="d-flex gap-2">
+            <button class="btn btn-success flex-fill" name="decision" value="approve" type="submit"><i class="bi bi-check-lg"></i> Approuver</button>
+            <button class="btn btn-outline-danger flex-fill" name="decision" value="reject" type="submit"><i class="bi bi-x-lg"></i> Refuser</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

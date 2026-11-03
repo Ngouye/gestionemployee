@@ -1,0 +1,18 @@
+{% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+{% if form.non_field_errors %}
+  <div class="alert alert-danger d-flex gap-2"><i class="bi bi-exclamation-octagon mt-1"></i><div>{% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}</div></div>
+{% endif %}
+{% if form.fieldsets %}
+  {% for section_title, names in form.fieldsets %}
+    <fieldset class="form-section">
+      <legend>{{ section_title }}</legend>
+      <div class="row g-3">
+        {% for name in names %}{% with field=form|field:name %}{% include 'includes/field.html' %}{% endwith %}{% endfor %}
+      </div>
+    </fieldset>
+  {% endfor %}
+{% else %}
+  <div class="row g-3">
+    {% for field in form.visible_fields %}{% include 'includes/field.html' %}{% endfor %}
+  </div>
+{% endif %}

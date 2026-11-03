@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes présences{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-clock-history"></i> Mes présences</h1>
+    <p class="page-subtitle">Horaires de référence : {{ company.work_start|time:"H:i" }} – {{ company.work_end|time:"H:i" }} (tolérance {{ company.late_tolerance_minutes }} min).</p>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-4">
+    <div class="card punch-card h-100">
+      <div class="card-body d-flex flex-column">
+        <div class="small opacity-75">{% now "l j F Y" %}</div>
+        <div class="clock my-2" data-clock>--:--:--</div>
+        <div class="small opacity-75 mb-3">
+          {% if today_record.check_in %}Arrivée à {{ today_record.check_in|time:"H:i" }}{% if today_record.check_out %} · départ à {{ today_record.check_out|time:"H:i" }}{% endif %}{% else %}Pas encore pointé aujourd'hui.{% endif %}
+        </div>
+        <form method="post" action="{% url 'attendance:punch' %}" class="mt-auto">
+          {% csrf_token %}
+          {% if not today_record.check_in %}
+            <button class="btn btn-light w-100 fw-semibold" name="action" value="in"><i class="bi bi-box-arrow-in-right"></i> Pointer mon arrivée</button>
+          {% elif not today_record.check_out %}
+            <button class="btn btn-light w-100 fw-semibold" name="action" value="out"><i class="bi bi-box-arrow-right"></i> Pointer mon départ</button>
+          {% else %}
+            <div class="text-center fw-semibold"><i class="bi bi-check2-circle"></i> Journée complète</div>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="row g-3 h-100">
+      <div class="col-6 col-md-3"><div class="card stat-card"><div><div class="stat-label">Jours travaillés</div><div class="stat-value">{{ stats.present }}</div><div class="stat-meta">{{ month_label }}</div></div></div></div>
+      <div class="col-6 col-md-3"><div class="card stat-card"><div><div class="stat-label">Retards</div><div class="stat-value text-warning">{{ stats.late }}</div><div class="stat-meta">{{ month_label }}</div></div></div></div>
+      <div class="col-6 col-md-3"><div class="card stat-card"><div><div class="stat-label">Absences</div><div class="stat-value text-danger">{{ stats.absent }}</div><div class="stat-meta">{{ month_label }}</div></div></div></div>
+      <div class="col-6 col-md-3"><div class="card stat-card"><div><div class="stat-label">Heures</div><div class="stat-value">{{ stats.hours|floatformat:1 }}</div><div class="stat-meta">{{ month_label }}</div></div></div></div>
+    </div>
+  </div>
+</div>
+
+{% if overtime %}
+<div class="card mb-4">
+  <div class="card-header"><h2 class="card-title"><i class="bi bi-alarm"></i> Heures supplémentaires — {{ month_label }}</h2></div>
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>Date</th><th>Type</th><th>Heures</th><th>Motif</th></tr></thead>
+      <tbody>
+        {% for o in overtime %}<tr><td>{{ o.date|date:"D d/m"|capfirst }}</td><td>{{ o.overtime_type }}</td><td>{{ o.hours|floatformat:"-2" }} h</td><td class="small text-body-secondary">{{ o.note }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header"><h2 class="card-title"><i class="bi bi-list-ul"></i> {{ month_label }}</h2></div>
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>Date</th><th>Arrivée</th><th>Départ</th><th>Heures</th><th>Statut</th><th>Source</th><th>Remarque</th></tr></thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td>{{ r.date|date:"D d/m"|capfirst }}</td>
+          <td>{{ r.check_in|time:"H:i"|default:"—" }}</td>
+          <td>{{ r.check_out|time:"H:i"|default:"—" }}</td>
+          <td>{{ r.worked_hours|default:"—" }}</td>
+          <td>{{ r.status|status_badge:r.get_status_display }}{% if r.late_minutes %} <small class="text-body-secondary">+{{ r.late_minutes }} min</small>{% endif %}</td>
+          <td class="small text-body-secondary">{{ r.get_source_display }}</td>
+          <td class="small text-body-secondary">{{ r.note }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="empty-state"><i class="bi bi-clock"></i>Aucun pointage ce mois-ci.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

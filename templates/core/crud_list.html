@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi {{ page_icon }}"></i> {{ page_title }}</h1>
+    {% if page_subtitle %}<p class="page-subtitle">{{ page_subtitle }}</p>{% endif %}
+  </div>
+  <div class="page-actions">
+    {% block list_actions %}{% endblock %}
+    {% if can_export %}
+    <div class="dropdown">
+      <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" type="button"><i class="bi bi-download"></i> Exporter</button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" href="{% querystring export='xlsx' page=None %}"><i class="bi bi-file-earmark-excel me-2 text-success"></i>Excel (.xlsx)</a></li>
+        <li><a class="dropdown-item" href="{% querystring export='csv' page=None %}"><i class="bi bi-filetype-csv me-2"></i>CSV</a></li>
+      </ul>
+    </div>
+    {% endif %}
+    {% if create_url_name %}
+      <a class="btn btn-primary" href="{% url create_url_name %}"><i class="bi bi-plus-lg"></i> Ajouter</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  {% if searchable or filters %}
+  <form class="filter-bar" method="get">
+    {% if searchable %}
+      <input class="form-control search-input" type="search" name="q" value="{{ q }}" placeholder="Rechercher…" aria-label="Rechercher">
+    {% endif %}
+    {% for f in filters %}
+      <select class="form-select" name="{{ f.name }}" data-autosubmit aria-label="{{ f.label }}">
+        <option value="">{{ f.label }} : tous</option>
+        {% for value, label in f.choices %}
+          <option value="{{ value }}" {% if value == f.value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    {% endfor %}
+    {% block extra_filters %}{% endblock %}
+    <button class="btn btn-outline-primary" type="submit"><i class="bi bi-funnel"></i> Filtrer</button>
+    {% if request.GET %}<a class="btn btn-link text-body-secondary" href="{{ request.path }}">Réinitialiser</a>{% endif %}
+  </form>
+  {% endif %}
+
+  {% block table %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          {% for col in columns %}<th>{{ col.label }}</th>{% endfor %}
+          {% if detail_url_name or update_url_name or delete_url_name %}<th class="text-end">Actions</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for obj in object_list %}
+        <tr>
+          {% for col in columns %}
+            <td>
+              {% if forloop.first and detail_url_name %}<a class="fw-semibold text-decoration-none" href="{% url detail_url_name obj.pk %}">{% cell obj col %}</a>
+              {% else %}{% cell obj col %}{% endif %}
+            </td>
+          {% endfor %}
+          {% if detail_url_name or update_url_name or delete_url_name %}
+          <td class="table-actions">
+            {% if detail_url_name %}<a class="btn btn-sm btn-outline-secondary" href="{% url detail_url_name obj.pk %}" title="Voir"><i class="bi bi-eye"></i></a>{% endif %}
+            {% if update_url_name %}<a class="btn btn-sm btn-outline-primary" href="{% url update_url_name obj.pk %}" title="Modifier"><i class="bi bi-pencil"></i></a>{% endif %}
+            {% if delete_url_name %}<a class="btn btn-sm btn-outline-danger" href="{% url delete_url_name obj.pk %}" title="Supprimer"><i class="bi bi-trash"></i></a>{% endif %}
+          </td>
+          {% endif %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="{{ columns|length|add:1 }}"><div class="empty-state"><i class="bi bi-inbox"></i>{{ empty_message }}</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endblock %}
+  {% include 'partials/pagination.html' %}
+</div>
+{% endblock %}

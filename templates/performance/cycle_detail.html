@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ cycle.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav aria-label="Fil d'Ariane"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{% url 'performance:cycle_list' %}">Campagnes d'évaluation</a></li><li class="breadcrumb-item active">{{ cycle.name }}</li></ol></nav>
+    <h1 class="page-title"><i class="bi bi-clipboard-check"></i> {{ cycle.name }} {{ cycle.status|status_badge:cycle.get_status_display }}</h1>
+    <p class="page-subtitle">Du {{ cycle.start_date|date:"d/m/Y" }} au {{ cycle.end_date|date:"d/m/Y" }}{% if cycle.description %} — {{ cycle.description }}{% endif %}</p>
+  </div>
+  <div class="page-actions">
+    {% if missing %}
+    <form method="post" action="{% url 'performance:cycle_generate' cycle.pk %}" data-confirm="Créer les évaluations pour {{ missing }} employé(s) ? Chaque responsable hiérarchique sera notifié.">
+      {% csrf_token %}<button class="btn btn-primary" type="submit"><i class="bi bi-magic"></i> Lancer les évaluations ({{ missing }})</button>
+    </form>
+    {% endif %}
+    <a class="btn btn-outline-primary" href="{% url 'performance:cycle_update' cycle.pk %}"><i class="bi bi-pencil"></i> Modifier</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4"><div class="card stat-card"><div class="stat-icon tone-primary"><i class="bi bi-people"></i></div><div><div class="stat-label">Évaluations</div><div class="stat-value">{{ stats.total }}</div></div></div></div>
+  <div class="col-md-4"><div class="card stat-card"><div class="stat-icon tone-success"><i class="bi bi-check2-circle"></i></div><div class="flex-grow-1"><div class="stat-label">Finalisées</div><div class="stat-value">{{ stats.done }} <small class="fs-6 text-body-secondary">({{ stats.done|percent:stats.total }} %)</small></div>
+    <div class="progress mt-1" style="height:5px" role="progressbar" aria-label="Avancement de la campagne" aria-valuenow="{{ stats.done|percent:stats.total }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-success" style="width: {{ stats.done|percent:stats.total }}%"></div></div></div></div></div>
+  <div class="col-md-4"><div class="card stat-card"><div class="stat-icon tone-warning"><i class="bi bi-star"></i></div><div><div class="stat-label">Note moyenne</div><div class="stat-value">{% if stats.avg %}{{ stats.avg|floatformat:1 }} / 5{% else %}—{% endif %}</div></div></div></div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr><th>Employé</th><th>Département</th><th>Évaluateur</th><th>Auto-évaluation</th><th>Note globale</th><th>Statut</th><th class="text-end"></th></tr></thead>
+      <tbody>
+        {% for r in reviews %}
+        <tr>
+          <td class="fw-semibold">{{ r.employee }}</td>
+          <td class="small">{{ r.employee.department|default:"—" }}</td>
+          <td class="small">{{ r.reviewer.display_name|default:"—" }}</td>
+          <td>{% if r.self_assessment %}<i class="bi bi-check-circle-fill text-success" title="Rédigée"></i>{% else %}<i class="bi bi-dash-circle text-body-tertiary" title="Non rédigée"></i>{% endif %}</td>
+          <td>{% if r.overall_rating %}<span class="stars">{% for n in "12345" %}{% if forloop.counter <= r.overall_rating %}★{% else %}☆{% endif %}{% endfor %}</span>{% else %}—{% endif %}</td>
+          <td>{{ r.status|status_badge:r.get_status_display }}</td>
+          <td class="table-actions"><a class="btn btn-sm btn-outline-secondary" href="{% url 'performance:review_detail' r.pk %}"><i class="bi bi-eye"></i></a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="empty-state"><i class="bi bi-clipboard"></i>Aucune évaluation. Cliquez sur « Lancer les évaluations ».</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

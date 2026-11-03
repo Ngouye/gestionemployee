@@ -1,0 +1,9 @@
+{% extends 'core/confirm_delete.html' %}
+
+{% block warning %}
+<div class="alert alert-warning text-start small">
+  <i class="bi bi-exclamation-triangle"></i> La suppression efface définitivement la fiche, ses contrats, documents, congés et présences.
+  Pour un départ, préférez passer le statut à <strong>« Sorti »</strong> avec une date de sortie : l'historique sera conservé.
+  Un employé ayant des bulletins de paie ne peut pas être supprimé.
+</div>
+{% endblock %}

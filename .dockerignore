@@ -1,0 +1,16 @@
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+**/__pycache__
+**/*.pyc
+*.sqlite3
+legacy/
+media/
+staticfiles/
+.venv/
+venv/
+.vscode/
+.idea/
+.claude/

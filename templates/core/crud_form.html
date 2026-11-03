@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ form_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    {% if page_title %}<nav aria-label="Fil d'Ariane"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{{ cancel_url }}">{{ page_title }}</a></li><li class="breadcrumb-item active">{{ form_title }}</li></ol></nav>{% endif %}
+    <h1 class="page-title">{{ form_title }}</h1>
+  </div>
+</div>
+
+<div class="row">
+  <div class="{% block form_width %}col-xxl-9{% endblock %}">
+    {% block before_form %}{% endblock %}
+    <div class="card">
+      <div class="card-body p-4">
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          {% include 'includes/form_fields.html' %}
+          {% block extra_form %}{% endblock %}
+          <div class="form-actions">
+            <a class="btn btn-outline-secondary" href="{{ cancel_url }}">Annuler</a>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-check-lg"></i> Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

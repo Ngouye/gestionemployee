@@ -1,0 +1,127 @@
+<aside class="sidebar" id="sidebar" aria-label="Navigation principale">
+  <a class="sidebar-brand" href="{% url 'core:dashboard' %}">
+    {% if company.logo %}
+      <img src="{% url 'core:company_logo' %}" alt="">
+    {% else %}
+      <span class="brand-mark">{{ company.name|initials }}</span>
+    {% endif %}
+    <span class="min-w-0">
+      <span class="brand-name d-block text-truncate">{{ company.name }}</span>
+      <span class="brand-sub">Gestion des ressources humaines</span>
+    </span>
+  </a>
+
+  <nav class="sidebar-nav">
+    <a class="nav-link {% nav_active '/' %}" href="{% url 'core:dashboard' %}"><i class="bi bi-grid-1x2"></i> Tableau de bord</a>
+    <a class="nav-link {% nav_active '/annonces/' %}" href="{% url 'core:announcements' %}"><i class="bi bi-megaphone"></i> Annonces</a>
+    <a class="nav-link {% nav_active '/employes/annuaire/' %}" href="{% url 'employees:directory' %}"><i class="bi bi-person-rolodex"></i> Annuaire</a>
+    <a class="nav-link {% nav_active '/employes/organigramme/' %}" href="{% url 'employees:org_chart' %}"><i class="bi bi-diagram-3"></i> Organigramme</a>
+
+    {% if current_employee %}
+    <div class="sidebar-section">Mon espace</div>
+    <a class="nav-link {% nav_active '/employes/mon-profil/' %}" href="{% url 'employees:my_profile' %}"><i class="bi bi-person-badge"></i> Mon profil</a>
+    <a class="nav-link {% if request.path == '/conges/' or request.path == '/conges/demander/' %}active{% endif %}" href="{% url 'leaves:my_leaves' %}"><i class="bi bi-calendar2-week"></i> Mes congés</a>
+    <a class="nav-link {% if request.path == '/presences/' %}active{% endif %}" href="{% url 'attendance:mine' %}"><i class="bi bi-clock-history"></i> Mes présences</a>
+    <a class="nav-link {% nav_active '/paie/mes-bulletins/' %}" href="{% url 'payroll:my_payslips' %}"><i class="bi bi-file-earmark-text"></i> Mes bulletins</a>
+    <a class="nav-link {% if request.path == '/notes-de-frais/' or request.path == '/notes-de-frais/nouvelle/' %}active{% endif %}" href="{% url 'expenses:mine' %}"><i class="bi bi-receipt"></i> Mes notes de frais</a>
+    <a class="nav-link {% if request.path == '/evaluations/' or '/evaluations/evaluation/' in request.path %}active{% endif %}" href="{% url 'performance:mine' %}"><i class="bi bi-graph-up-arrow"></i> Évaluations & objectifs</a>
+    <a class="nav-link {% nav_active '/formations/mes-formations/' %}" href="{% url 'training:mine' %}"><i class="bi bi-mortarboard"></i> Mes formations</a>
+    {% endif %}
+
+    {% if user.is_hr or has_team %}
+    <div class="sidebar-section">Management</div>
+    <a class="nav-link {% nav_active '/validations/' %}" href="{% url 'core:approvals' %}">
+      <i class="bi bi-check2-square"></i> Validations
+      {% if pending_approvals_count %}<span class="badge rounded-pill text-bg-danger">{{ pending_approvals_count }}</span>{% endif %}
+    </a>
+    {% if not user.is_hr %}
+    <a class="nav-link {% if request.path == '/employes/' %}active{% endif %}" href="{% url 'employees:list' %}"><i class="bi bi-people"></i> Mon équipe</a>
+    <a class="nav-link {% nav_active '/presences/registre/' %}" href="{% url 'attendance:register' %}"><i class="bi bi-list-check"></i> Présences de l'équipe</a>
+    <a class="nav-link {% nav_active '/presences/heures-sup/' %}" href="{% url 'attendance:overtime_list' %}"><i class="bi bi-alarm"></i> Heures supplémentaires</a>
+    <a class="nav-link {% nav_active '/evaluations/objectifs/' %}" href="{% url 'performance:objective_list' %}"><i class="bi bi-bullseye"></i> Objectifs de l'équipe</a>
+    {% endif %}
+    <a class="nav-link {% nav_active '/conges/calendrier/' %}" href="{% url 'leaves:calendar' %}"><i class="bi bi-calendar3"></i> Calendrier des absences</a>
+    {% endif %}
+
+    {% if user.is_hr %}
+    <div class="sidebar-section">Ressources humaines</div>
+    <a class="nav-link nav-group-toggle" data-bs-toggle="collapse" href="#nav-employees" role="button" aria-expanded="{% if '/employes/' in request.path or '/organisation/' in request.path %}true{% else %}false{% endif %}">
+      <i class="bi bi-people"></i> Personnel
+    </a>
+    <div class="collapse nav-sub {% if '/employes/' in request.path or '/organisation/' in request.path %}show{% endif %}" id="nav-employees">
+      <a class="nav-link {% if request.path == '/employes/' %}active{% endif %}" href="{% url 'employees:list' %}">Employés</a>
+      <a class="nav-link {% nav_active '/employes/contrats/' %}" href="{% url 'employees:contract_list' %}">Contrats</a>
+      <a class="nav-link {% nav_active '/employes/importer/' %}" href="{% url 'employees:import' %}">Import</a>
+      <a class="nav-link {% nav_active '/organisation/departements/' %}" href="{% url 'organization:department_list' %}">Départements</a>
+      <a class="nav-link {% nav_active '/organisation/postes/' %}" href="{% url 'organization:position_list' %}">Postes</a>
+    </div>
+
+    <a class="nav-link nav-group-toggle" data-bs-toggle="collapse" href="#nav-leaves" role="button" aria-expanded="{% if '/conges/' in request.path and '/conges/calendrier/' not in request.path %}true{% else %}false{% endif %}">
+      <i class="bi bi-calendar-check"></i> Congés & absences
+    </a>
+    <div class="collapse nav-sub {% if '/conges/' in request.path and '/conges/calendrier/' not in request.path %}show{% endif %}" id="nav-leaves">
+      <a class="nav-link {% nav_active '/conges/toutes/' %}" href="{% url 'leaves:list' %}">Toutes les demandes</a>
+      <a class="nav-link {% nav_active '/conges/soldes/' %}" href="{% url 'leaves:balances' %}">Soldes</a>
+      <a class="nav-link {% nav_active '/conges/types/' %}" href="{% url 'leaves:type_list' %}">Types de congé</a>
+      <a class="nav-link {% nav_active '/conges/jours-feries/' %}" href="{% url 'leaves:holiday_list' %}">Jours fériés</a>
+    </div>
+
+    <a class="nav-link nav-group-toggle" data-bs-toggle="collapse" href="#nav-attendance" role="button" aria-expanded="{% if '/presences/registre/' in request.path or '/presences/rapport/' in request.path or '/presences/heures-sup/' in request.path %}true{% else %}false{% endif %}">
+      <i class="bi bi-clock"></i> Présences
+    </a>
+    <div class="collapse nav-sub {% if '/presences/registre/' in request.path or '/presences/rapport/' in request.path or '/presences/heures-sup/' in request.path %}show{% endif %}" id="nav-attendance">
+      <a class="nav-link {% nav_active '/presences/registre/' %}" href="{% url 'attendance:register' %}">Registre du jour</a>
+      <a class="nav-link {% nav_active '/presences/rapport/' %}" href="{% url 'attendance:report' %}">Rapport mensuel</a>
+      <a class="nav-link {% if request.path == '/presences/heures-sup/' or '/presences/heures-sup/saisir' in request.path %}active{% endif %}" href="{% url 'attendance:overtime_list' %}">Heures supplémentaires</a>
+      <a class="nav-link {% nav_active '/presences/heures-sup/types/' %}" href="{% url 'attendance:overtime_type_list' %}">Majorations</a>
+    </div>
+
+    <a class="nav-link nav-group-toggle" data-bs-toggle="collapse" href="#nav-payroll" role="button" aria-expanded="{% if '/paie/' in request.path and '/paie/mes-bulletins/' not in request.path %}true{% else %}false{% endif %}">
+      <i class="bi bi-cash-stack"></i> Paie
+    </a>
+    <div class="collapse nav-sub {% if '/paie/' in request.path and '/paie/mes-bulletins/' not in request.path %}show{% endif %}" id="nav-payroll">
+      <a class="nav-link {% nav_active '/paie/periodes/' %}" href="{% url 'payroll:period_list' %}">Périodes de paie</a>
+      <a class="nav-link {% nav_active '/paie/elements/' %}" href="{% url 'payroll:item_list' %}">Primes et retenues</a>
+      <a class="nav-link {% nav_active '/paie/cotisations/' %}" href="{% url 'payroll:rule_list' %}">Cotisations</a>
+      <a class="nav-link {% nav_active '/paie/bareme-impot/' %}" href="{% url 'payroll:bracket_list' %}">Barème de l'impôt</a>
+    </div>
+
+    <a class="nav-link nav-group-toggle" data-bs-toggle="collapse" href="#nav-expenses" role="button" aria-expanded="{% if '/notes-de-frais/toutes/' in request.path or '/notes-de-frais/categories/' in request.path %}true{% else %}false{% endif %}">
+      <i class="bi bi-wallet2"></i> Notes de frais
+    </a>
+    <div class="collapse nav-sub {% if '/notes-de-frais/toutes/' in request.path or '/notes-de-frais/categories/' in request.path %}show{% endif %}" id="nav-expenses">
+      <a class="nav-link {% nav_active '/notes-de-frais/toutes/' %}" href="{% url 'expenses:list' %}">Toutes les notes</a>
+      <a class="nav-link {% nav_active '/notes-de-frais/categories/' %}" href="{% url 'expenses:category_list' %}">Catégories</a>
+    </div>
+
+    <a class="nav-link nav-group-toggle" data-bs-toggle="collapse" href="#nav-recruitment" role="button" aria-expanded="{% if '/recrutement/' in request.path %}true{% else %}false{% endif %}">
+      <i class="bi bi-person-plus"></i> Recrutement
+    </a>
+    <div class="collapse nav-sub {% if '/recrutement/' in request.path %}show{% endif %}" id="nav-recruitment">
+      <a class="nav-link {% nav_active '/recrutement/offres/' %}" href="{% url 'recruitment:job_list' %}">Offres d'emploi</a>
+      <a class="nav-link {% nav_active '/recrutement/candidatures/' %}" href="{% url 'recruitment:application_list' %}">Candidatures</a>
+      <a class="nav-link {% nav_active '/recrutement/entretiens/' %}" href="{% url 'recruitment:interview_list' %}">Entretiens</a>
+      <a class="nav-link" href="{% url 'recruitment:careers_list' %}" target="_blank" rel="noopener">Page carrières <i class="bi bi-box-arrow-up-right small"></i></a>
+    </div>
+
+    <a class="nav-link nav-group-toggle" data-bs-toggle="collapse" href="#nav-talent" role="button" aria-expanded="{% if '/evaluations/campagnes/' in request.path or '/evaluations/objectifs/' in request.path or request.path == '/formations/' %}true{% else %}false{% endif %}">
+      <i class="bi bi-stars"></i> Talents
+    </a>
+    <div class="collapse nav-sub {% if '/evaluations/campagnes/' in request.path or '/evaluations/objectifs/' in request.path or request.path == '/formations/' %}show{% endif %}" id="nav-talent">
+      <a class="nav-link {% nav_active '/evaluations/campagnes/' %}" href="{% url 'performance:cycle_list' %}">Campagnes d'évaluation</a>
+      <a class="nav-link {% nav_active '/evaluations/objectifs/' %}" href="{% url 'performance:objective_list' %}">Objectifs</a>
+      <a class="nav-link {% if request.path == '/formations/' %}active{% endif %}" href="{% url 'training:list' %}">Formations</a>
+    </div>
+    <a class="nav-link {% nav_active '/annonces/gestion/' %}" href="{% url 'core:announcement_admin' %}"><i class="bi bi-broadcast"></i> Gérer les annonces</a>
+    {% endif %}
+
+    {% if user.is_admin_role %}
+    <div class="sidebar-section">Administration</div>
+    <a class="nav-link {% nav_active '/compte/utilisateurs/' %}" href="{% url 'accounts:user_list' %}"><i class="bi bi-person-gear"></i> Utilisateurs & rôles</a>
+    <a class="nav-link {% nav_active '/administration/parametres/' %}" href="{% url 'core:settings' %}"><i class="bi bi-gear"></i> Paramètres</a>
+    <a class="nav-link {% nav_active '/administration/journal/' %}" href="{% url 'core:audit_log' %}"><i class="bi bi-shield-check"></i> Journal d'audit</a>
+    <a class="nav-link" href="{% url 'api:api-root' %}" target="_blank" rel="noopener"><i class="bi bi-braces"></i> API REST</a>
+    {% endif %}
+  </nav>
+  <div class="sidebar-footer">{{ APP_NAME }} · v{{ APP_VERSION }}</div>
+</aside>

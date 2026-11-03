@@ -1,0 +1,40 @@
+{% extends 'recruitment/public_base.html' %}
+
+{% block title %}{{ job.title }}{% endblock %}
+
+{% block public_content %}
+<section class="public-hero">
+  <div class="container">
+    <a class="text-white-50 small text-decoration-none" href="{% url 'recruitment:careers_list' %}"><i class="bi bi-arrow-left"></i> Toutes les offres</a>
+    <h1 class="display-6 fw-bold mt-2">{{ job.title }}</h1>
+    <p class="mb-0 opacity-75"><i class="bi bi-geo-alt"></i> {{ job.location }} · {{ job.get_contract_type_display }}{% if job.department %} · {{ job.department }}{% endif %}{% if job.salary_range %} · {{ job.salary_range }}{% endif %}</p>
+  </div>
+</section>
+<main class="container py-5">
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card mb-3"><div class="card-body p-4"><h2 class="h5 fw-bold">Le poste</h2>{{ job.description|linebreaks }}</div></div>
+      {% if job.requirements %}<div class="card"><div class="card-body p-4"><h2 class="h5 fw-bold">Profil recherché</h2>{{ job.requirements|linebreaks }}</div></div>{% endif %}
+    </div>
+    <div class="col-lg-5">
+      <div class="card" id="postuler">
+        <div class="card-header"><h2 class="card-title"><i class="bi bi-send"></i> Postuler</h2></div>
+        <div class="card-body">
+          {% include 'partials/messages.html' %}
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            <div class="d-none" aria-hidden="true">{{ form.website }}</div>
+            {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="row g-3">
+              {% for field in form.visible_fields %}{% if field.name != 'website' %}{% include 'includes/field.html' %}{% endif %}{% endfor %}
+            </div>
+            <button class="btn btn-primary w-100 mt-4" type="submit">Envoyer ma candidature</button>
+            <p class="small text-body-secondary mt-3 mb-0">CV au format PDF, Word ou image, 10 Mo maximum.</p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}

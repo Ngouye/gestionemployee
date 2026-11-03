@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Paramètres{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-gear"></i> Paramètres de l'entreprise</h1>
+    <p class="page-subtitle">Ces informations apparaissent sur les bulletins de paie, la page carrières et dans toute l'application.</p>
+  </div>
+</div>
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="card">
+      <div class="card-body p-4">
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          {% include 'includes/form_fields.html' %}
+          <div class="form-actions"><button class="btn btn-primary" type="submit"><i class="bi bi-check-lg"></i> Enregistrer</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-4">
+    <div class="card mb-3">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-sliders"></i> Paramétrage métier</h2></div>
+      <div class="list-group list-group-flush">
+        <a class="list-group-item list-group-item-action" href="{% url 'leaves:type_list' %}"><i class="bi bi-tags me-2"></i>Types de congé</a>
+        <a class="list-group-item list-group-item-action" href="{% url 'leaves:holiday_list' %}"><i class="bi bi-calendar-heart me-2"></i>Jours fériés</a>
+        <a class="list-group-item list-group-item-action" href="{% url 'payroll:rule_list' %}"><i class="bi bi-percent me-2"></i>Cotisations sociales</a>
+        <a class="list-group-item list-group-item-action" href="{% url 'payroll:bracket_list' %}"><i class="bi bi-bar-chart-steps me-2"></i>Barème de l'impôt</a>
+        <a class="list-group-item list-group-item-action" href="{% url 'expenses:category_list' %}"><i class="bi bi-receipt me-2"></i>Catégories de frais</a>
+        <a class="list-group-item list-group-item-action" href="{% url 'organization:department_list' %}"><i class="bi bi-diagram-3 me-2"></i>Départements</a>
+        <a class="list-group-item list-group-item-action" href="{% url 'organization:position_list' %}"><i class="bi bi-briefcase me-2"></i>Postes</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body small text-body-secondary">
+        <p class="mb-2"><i class="bi bi-info-circle text-primary"></i> <strong>Version :</strong> {{ APP_NAME }} {{ APP_VERSION }}</p>
+        <p class="mb-0">Les taux de cotisation et le barème de l'impôt sont fournis à titre d'exemple : faites-les valider par votre expert-comptable avant la première paie.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

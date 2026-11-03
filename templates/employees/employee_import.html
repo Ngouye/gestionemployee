@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Importer des employés{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav aria-label="Fil d'Ariane"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{% url 'employees:list' %}">Employés</a></li><li class="breadcrumb-item active">Import</li></ol></nav>
+    <h1 class="page-title"><i class="bi bi-upload"></i> Importer des employés</h1>
+    <p class="page-subtitle">Reprenez en quelques minutes votre fichier du personnel existant.</p>
+  </div>
+  <div class="page-actions"><a class="btn btn-outline-success" href="?modele=1"><i class="bi bi-file-earmark-excel"></i> Télécharger le modèle Excel</a></div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-body p-4">
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          {% include 'includes/form_fields.html' %}
+          <div class="form-actions"><button class="btn btn-primary" type="submit"><i class="bi bi-upload"></i> Lancer l'import</button></div>
+        </form>
+      </div>
+    </div>
+    {% if report %}
+    <div class="card mt-4">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-clipboard-data"></i> Rapport d'import</h2></div>
+      <div class="card-body">
+        <p><span class="badge bg-success-subtle text-success-emphasis fs-6">{{ report.created }} créé(s)</span> <span class="badge bg-danger-subtle text-danger-emphasis fs-6">{{ report.errors|length }} erreur(s)</span></p>
+        {% if report.errors %}
+        <table class="table table-sm"><thead><tr><th>Ligne</th><th>Erreur</th></tr></thead><tbody>
+          {% for line, message in report.errors %}<tr><td>{{ line }}</td><td>{{ message }}</td></tr>{% endfor %}
+        </tbody></table>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-info-circle"></i> Format attendu</h2></div>
+      <div class="card-body small">
+        <p>La première ligne doit contenir les en-têtes suivants (l'ordre est libre) :</p>
+        <ul class="mb-3">
+          <li><code>prenom</code>, <code>nom</code>, <code>email</code>, <code>date_embauche</code> — <strong>obligatoires</strong></li>
+          <li><code>matricule</code> — généré automatiquement si vide</li>
+          <li><code>telephone</code>, <code>genre</code> (M/F), <code>date_naissance</code></li>
+          <li><code>departement</code>, <code>poste</code> — créés s'ils n'existent pas</li>
+          <li><code>type_contrat</code> (CDI, CDD, STAGE, APPRENTI, INTERIM, PRESTA), <code>salaire_base</code></li>
+        </ul>
+        <p class="mb-0 text-body-secondary">Dates au format JJ/MM/AAAA. Les lignes en erreur sont ignorées et listées dans le rapport ; les autres sont importées.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes congés{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-calendar2-week"></i> Mes congés</h1>
+    <p class="page-subtitle">Soldes, demandes et jours fériés à venir.</p>
+  </div>
+  <div class="page-actions">
+    <form method="get"><select class="form-select" name="annee" data-autosubmit aria-label="Année">{% for y in years %}<option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>{% endfor %}</select></form>
+    <a class="btn btn-outline-secondary" href="{% url 'leaves:calendar' %}"><i class="bi bi-calendar3"></i> Calendrier</a>
+    <a class="btn btn-primary" href="{% url 'leaves:create' %}"><i class="bi bi-calendar-plus"></i> Nouvelle demande</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  {% for b in balances %}
+  <div class="col-sm-6 col-xl-3">
+    <div class="balance-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div class="small text-body-secondary fw-semibold">{{ b.leave_type }}</div>
+        <span class="color-swatch" style="background:{{ b.leave_type.color }}"></span>
+      </div>
+      <div class="balance-value">{{ b.remaining|days }}</div>
+      <div class="small text-body-secondary mb-2">disponibles sur {{ b.total|days }}{% if b.balance.carried_over %} (dont {{ b.balance.carried_over|days }} reportés){% endif %}</div>
+      <div class="progress" role="progressbar" aria-label="Jours pris : {{ b.leave_type }}" aria-valuenow="{{ b.used|percent:b.total }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width: {{ b.used|percent:b.total }}%; background: {{ b.leave_type.color }}"></div></div>
+      <div class="d-flex justify-content-between small mt-2"><span>{{ b.used|days }} pris</span><span class="text-warning-emphasis">{{ b.pending|days }} en attente</span></div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12"><div class="alert alert-info mb-0">Aucun type de congé avec solde n'est configuré.</div></div>
+  {% endfor %}
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-list-ul"></i> Mes demandes {{ year }}</h2></div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead><tr><th>Type</th><th>Période</th><th>Jours</th><th>Statut</th><th>Traitée par</th><th class="text-end"></th></tr></thead>
+          <tbody>
+            {% for r in requests %}
+            <tr>
+              <td><span class="color-swatch me-1" style="background:{{ r.leave_type.color }};width:10px;height:10px"></span>{{ r.leave_type }}</td>
+              <td class="small">{{ r.start_date|date:"d/m/Y" }} → {{ r.end_date|date:"d/m/Y" }}{% if r.half_day %} (½){% endif %}</td>
+              <td>{{ r.days|days }}</td>
+              <td>{{ r.status|status_badge:r.get_status_display }}</td>
+              <td class="small text-body-secondary">{{ r.reviewed_by.display_name|default:"—" }}</td>
+              <td class="table-actions"><a class="btn btn-sm btn-outline-secondary" href="{% url 'leaves:detail' r.pk %}"><i class="bi bi-eye"></i></a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6"><div class="empty-state"><i class="bi bi-calendar-x"></i>Aucune demande pour {{ year }}.<div class="mt-2"><a class="btn btn-sm btn-primary" href="{% url 'leaves:create' %}">Faire une demande</a></div></div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-calendar-heart"></i> Prochains jours fériés</h2></div>
+      <ul class="list-group list-group-flush list-compact">
+        {% for day, holiday in upcoming_holidays %}
+          <li class="list-group-item d-flex justify-content-between"><span>{{ holiday.name }}</span><span class="small text-body-secondary">{{ day|date:"D j F" }}</span></li>
+        {% empty %}<li class="list-group-item small text-body-secondary">Aucun jour férié dans les 4 prochains mois.</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

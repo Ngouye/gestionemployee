@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Registre des présences{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-list-check"></i> Registre des présences</h1>
+    <p class="page-subtitle">{{ day|date:"l j F Y"|capfirst }}{% if not is_working_day %} — <span class="text-warning-emphasis">jour non travaillé</span>{% endif %}</p>
+  </div>
+  <div class="page-actions align-items-center">
+    <div class="btn-group">
+      <a class="btn btn-outline-secondary" href="?date={{ prev_day|date:'Y-m-d' }}{% if department %}&departement={{ department }}{% endif %}" aria-label="Jour précédent"><i class="bi bi-chevron-left"></i></a>
+      <a class="btn btn-outline-secondary" href="?date={{ next_day|date:'Y-m-d' }}{% if department %}&departement={{ department }}{% endif %}" aria-label="Jour suivant"><i class="bi bi-chevron-right"></i></a>
+    </div>
+    <form method="get" class="d-flex gap-2">
+      <input class="form-control" type="date" name="date" value="{{ day|date:'Y-m-d' }}" data-autosubmit aria-label="Date">
+      {% if user.is_hr %}
+      <select class="form-select" name="departement" data-autosubmit aria-label="Département">
+        <option value="">Tous les départements</option>
+        {% for d in departments %}<option value="{{ d.pk }}" {% if department == d.pk|stringformat:"s" %}selected{% endif %}>{{ d.name }}</option>{% endfor %}
+      </select>
+      {% endif %}
+    </form>
+    <a class="btn btn-outline-secondary" href="{% url 'attendance:report' %}"><i class="bi bi-bar-chart"></i> Rapport mensuel</a>
+    {% if can_edit %}<a class="btn btn-primary" href="{% url 'attendance:create' %}?date={{ day|date:'Y-m-d' }}"><i class="bi bi-plus-lg"></i> Saisir</a>{% endif %}
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg"><div class="card stat-card"><div class="stat-icon tone-primary"><i class="bi bi-people"></i></div><div><div class="stat-label">Effectif</div><div class="stat-value">{{ summary.total }}</div></div></div></div>
+  <div class="col-6 col-lg"><div class="card stat-card"><div class="stat-icon tone-success"><i class="bi bi-person-check"></i></div><div><div class="stat-label">Présents</div><div class="stat-value">{{ summary.present }}</div></div></div></div>
+  <div class="col-6 col-lg"><div class="card stat-card"><div class="stat-icon tone-warning"><i class="bi bi-alarm"></i></div><div><div class="stat-label">En retard</div><div class="stat-value">{{ summary.late }}</div></div></div></div>
+  <div class="col-6 col-lg"><div class="card stat-card"><div class="stat-icon tone-info"><i class="bi bi-airplane"></i></div><div><div class="stat-label">En congé</div><div class="stat-value">{{ summary.on_leave }}</div></div></div></div>
+  <div class="col-6 col-lg"><div class="card stat-card"><div class="stat-icon tone-danger"><i class="bi bi-question-circle"></i></div><div><div class="stat-label">Absents / non pointés</div><div class="stat-value">{{ summary.absent|add:summary.missing }}</div></div></div></div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr><th>Employé</th><th>Département</th><th>Arrivée</th><th>Départ</th><th>Heures</th><th>Statut</th>{% if can_edit %}<th class="text-end">Actions</th>{% endif %}</tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td><div class="person"><span class="avatar avatar-sm">{{ row.employee.full_name|initials }}</span><a class="person-name" href="{% url 'employees:detail' row.employee.pk %}#presences">{{ row.employee }}</a></div></td>
+          <td class="small">{{ row.employee.department|default:"—" }}</td>
+          <td>{{ row.record.check_in|time:"H:i"|default:"—" }}</td>
+          <td>{{ row.record.check_out|time:"H:i"|default:"—" }}</td>
+          <td>{{ row.record.worked_hours|default:"—" }}</td>
+          <td>
+            {% if row.record %}{{ row.record.status|status_badge:row.record.get_status_display }}
+            {% elif row.leave %}<span class="badge rounded-pill" style="background:{{ row.leave.leave_type.color }}">{{ row.leave.leave_type }}</span>
+            {% elif is_working_day %}<span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">Non pointé</span>
+            {% else %}<span class="text-body-tertiary">—</span>{% endif %}
+          </td>
+          {% if can_edit %}
+          <td class="table-actions">
+            {% if row.record %}
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'attendance:update' row.record.pk %}" title="Modifier"><i class="bi bi-pencil"></i></a>
+              <a class="btn btn-sm btn-outline-danger" href="{% url 'attendance:delete' row.record.pk %}" title="Supprimer"><i class="bi bi-trash"></i></a>
+            {% elif not row.leave %}
+              <a class="btn btn-sm btn-outline-success" href="{% url 'attendance:create' %}?date={{ day|date:'Y-m-d' }}&employe={{ row.employee.pk }}" title="Saisir une présence"><i class="bi bi-check-lg"></i></a>
+              <a class="btn btn-sm btn-outline-danger" href="{% url 'attendance:create' %}?date={{ day|date:'Y-m-d' }}&employe={{ row.employee.pk }}&statut=ABSENT" title="Marquer absent"><i class="bi bi-x-lg"></i></a>
+            {% endif %}
+          </td>
+          {% endif %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="empty-state"><i class="bi bi-people"></i>Aucun employé.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

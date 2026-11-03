@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Calendrier des absences{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-calendar3"></i> Calendrier des absences</h1>
+    <p class="page-subtitle">Congés approuvés (plein) et en attente (pointillés).</p>
+  </div>
+  <div class="page-actions align-items-center">
+    {% if departments %}
+    <form method="get" class="d-flex gap-2">
+      <input type="hidden" name="annee" value="{{ request.GET.annee }}"><input type="hidden" name="mois" value="{{ request.GET.mois }}">
+      <select class="form-select" name="departement" data-autosubmit aria-label="Département">
+        <option value="">Tous les départements</option>
+        {% for d in departments %}<option value="{{ d.pk }}" {% if department == d.pk|stringformat:"s" %}selected{% endif %}>{{ d.name }}</option>{% endfor %}
+      </select>
+    </form>
+    {% endif %}
+    <div class="btn-group">
+      <a class="btn btn-outline-secondary" href="?annee={{ prev.annee }}&mois={{ prev.mois }}{% if department %}&departement={{ department }}{% endif %}" aria-label="Mois précédent"><i class="bi bi-chevron-left"></i></a>
+      <span class="btn btn-outline-secondary disabled fw-semibold" style="min-width:150px">{{ month_label }}</span>
+      <a class="btn btn-outline-secondary" href="?annee={{ next.annee }}&mois={{ next.mois }}{% if department %}&departement={{ department }}{% endif %}" aria-label="Mois suivant"><i class="bi bi-chevron-right"></i></a>
+    </div>
+    <a class="btn btn-outline-primary" href="{% url 'leaves:calendar' %}">Aujourd'hui</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="calendar">
+    {% for name in weekdays %}<div class="cal-head">{{ name }}</div>{% endfor %}
+    {% for week in weeks %}
+      {% for day in week %}
+        <div class="cal-day{% if not day.in_month %} out{% endif %}{% if day.is_weekend %} weekend{% endif %}{% if day.is_today %} today{% endif %}">
+          <span class="cal-num">{{ day.date.day }}</span>
+          {% if day.holiday %}<span class="cal-holiday" title="{{ day.holiday }}"><i class="bi bi-star-fill"></i> {{ day.holiday }}</span>{% endif %}
+          {% for leave in day.leaves %}
+            <a class="cal-event{% if leave.status == 'PENDING' %} pending{% endif %}" style="background: {{ leave.leave_type.color }}" href="{% url 'leaves:detail' leave.pk %}" title="{{ leave.employee }} — {{ leave.leave_type }} ({{ leave.get_status_display }})">{{ leave.employee.first_name }} {{ leave.employee.last_name|slice:":1" }}.</a>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    {% endfor %}
+  </div>
+  <div class="card-body border-top d-flex flex-wrap gap-3 small">
+    {% for t in leave_types %}<span><span class="color-swatch me-1" style="background:{{ t.color }};width:12px;height:12px"></span>{{ t.name }}</span>{% endfor %}
+    <span class="text-danger"><i class="bi bi-star-fill"></i> Jour férié</span>
+  </div>
+</div>
+{% endblock %}

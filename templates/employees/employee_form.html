@@ -1,0 +1,19 @@
+{% extends 'core/crud_form.html' %}
+
+{% block form_width %}col-12 col-xxl-10{% endblock %}
+
+{% block extra_form %}
+{% if contract_form %}
+<fieldset class="form-section">
+  <legend>Contrat initial</legend>
+  <p class="small text-body-secondary">Le contrat démarre à la date d'embauche, sur le poste sélectionné. Les avenants se gèrent ensuite depuis la fiche.</p>
+  {% with form=contract_form %}{% include 'includes/form_fields.html' %}{% endwith %}
+</fieldset>
+{% endif %}
+{% if account_form %}
+<fieldset class="form-section">
+  <legend>Accès à l'application</legend>
+  {% with form=account_form %}{% include 'includes/form_fields.html' %}{% endwith %}
+</fieldset>
+{% endif %}
+{% endblock %}

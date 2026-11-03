@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Soldes de congés{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-wallet2"></i> Soldes de congés {{ year }}</h1>
+    <p class="page-subtitle">Jours restants = acquis + reportés − pris − en attente. Cliquez sur une case pour ajuster un solde.</p>
+  </div>
+  <div class="page-actions">
+    <form method="get" class="d-flex gap-2">
+      <input class="form-control" type="search" name="q" value="{{ q }}" placeholder="Rechercher…" aria-label="Rechercher">
+      <select class="form-select" name="annee" data-autosubmit aria-label="Année">{% for y in years %}<option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>{% endfor %}</select>
+    </form>
+    <form method="post" action="{% url 'leaves:balance_allocate' %}" data-confirm="Créer les soldes {{ year }} manquants pour tous les employés actifs (avec report des jours non pris) ?">
+      {% csrf_token %}<input type="hidden" name="annee" value="{{ year }}">
+      <button class="btn btn-primary" type="submit"><i class="bi bi-magic"></i> Allouer les soldes {{ year }}{% if missing %} ({{ missing }}){% endif %}</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr><th>Employé</th>{% for t in types %}<th class="text-center"><span class="color-swatch me-1" style="background:{{ t.color }};width:10px;height:10px"></span>{{ t.name }}</th>{% endfor %}</tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td><a class="fw-semibold text-decoration-none" href="{% url 'employees:detail' row.employee.pk %}#conges">{{ row.employee }}</a><div class="small text-body-secondary">{{ row.employee.department|default:"" }}</div></td>
+          {% for c in row.cells %}
+          <td class="text-center">
+            {% if c.balance %}
+              <a class="text-decoration-none d-inline-block" href="{% url 'leaves:balance_update' c.balance.pk %}" title="Acquis {{ c.total|days }} · pris {{ c.used|days }} · en attente {{ c.pending|days }}">
+                <span class="fw-bold {% if c.remaining < 0 %}text-danger{% endif %}">{{ c.remaining|days }}</span>
+                <span class="small text-body-secondary">/ {{ c.total|days }}</span>
+              </a>
+            {% else %}<span class="small text-body-tertiary" title="Solde non alloué">—</span>{% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="{{ types|length|add:1 }}"><div class="empty-state"><i class="bi bi-people"></i>Aucun employé actif.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

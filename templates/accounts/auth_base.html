@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="auth-page">
+  <div class="auth-box">
+    <div class="auth-brand">
+      {% if company.logo %}
+        <img src="{% url 'core:company_logo' %}" alt="">
+      {% else %}
+        <span class="brand-mark">{{ company.name|initials }}</span>
+      {% endif %}
+      <span class="auth-brand-name">{{ company.name }}</span>
+    </div>
+    <div class="card auth-card">
+      <div class="card-body">
+        {% include 'partials/messages.html' %}
+        {% block auth_content %}{% endblock %}
+      </div>
+    </div>
+    {% block auth_after %}{% endblock %}
+    <div class="auth-footer">
+      <span>{{ APP_NAME }} v{{ APP_VERSION }}</span>
+      <button class="btn btn-sm btn-link text-body-secondary p-0" type="button" data-theme-toggle><i data-theme-icon class="bi bi-moon-stars"></i> Changer de thème</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

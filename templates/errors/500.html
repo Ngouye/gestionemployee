@@ -1,0 +1,18 @@
+{% load static %}<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Erreur serveur</title>
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
+</head>
+<body class="bg-body-tertiary d-flex align-items-center justify-content-center" style="min-height:100vh">
+  <div class="text-center p-4" style="max-width:480px">
+    <div class="display-1 fw-bold text-danger">500</div>
+    <h1 class="h4 fw-bold">Une erreur inattendue s'est produite</h1>
+    <p class="text-body-secondary">L'incident a été enregistré. Merci de réessayer dans quelques instants.</p>
+    <a class="btn btn-primary" href="/"><i class="bi bi-house"></i> Retour à l'accueil</a>
+  </div>
+</body>
+</html>

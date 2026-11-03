@@ -1,0 +1,350 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ employee.full_name }}{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+  <div class="profile-cover"></div>
+  <div class="profile-head">
+    <span class="avatar avatar-xl">{% if employee.photo %}<img src="{% url 'employees:photo' employee.pk %}" alt="Photo de {{ employee.full_name }}">{% else %}{{ employee.full_name|initials }}{% endif %}</span>
+    <div class="flex-grow-1 min-w-0 pb-1">
+      <h1 class="h3 fw-bold mb-1">{{ employee.full_name }}</h1>
+      <div class="text-body-secondary d-flex flex-wrap gap-3 small">
+        <span><i class="bi bi-briefcase"></i> {{ employee.position|default:"Poste non renseigné" }}</span>
+        <span><i class="bi bi-diagram-3"></i> {{ employee.department|default:"—" }}</span>
+        <span><i class="bi bi-hash"></i> {{ employee.employee_id }}</span>
+        <span>{{ employee.status|status_badge:employee.get_status_display }}</span>
+      </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2 pb-1">
+      {% if is_self %}
+        <form method="post" action="{% url 'employees:request_attestation' %}" data-confirm="Envoyer une demande d'attestation de travail aux RH ?">
+          {% csrf_token %}<button class="btn btn-outline-secondary" type="submit"><i class="bi bi-file-earmark-check"></i> Demander une attestation</button>
+        </form>
+        <a class="btn btn-outline-primary" href="{% url 'employees:my_profile_update' %}"><i class="bi bi-pencil"></i> Modifier mes informations</a>
+      {% endif %}
+      {% if can_edit %}
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" type="button"><i class="bi bi-three-dots"></i> Actions</button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'employees:contract_create' employee.pk %}"><i class="bi bi-file-earmark-plus me-2"></i>Nouveau contrat / avenant</a></li>
+            <li><a class="dropdown-item" href="{% url 'payroll:item_create' %}?employe={{ employee.pk }}"><i class="bi bi-plus-slash-minus me-2"></i>Ajouter une prime / retenue</a></li>
+            <li><a class="dropdown-item" href="{% url 'performance:objective_create' %}?employe={{ employee.pk }}"><i class="bi bi-bullseye me-2"></i>Fixer un objectif</a></li>
+            <li><a class="dropdown-item" href="{% url 'attendance:create' %}?employe={{ employee.pk }}"><i class="bi bi-clock me-2"></i>Saisir une présence</a></li>
+            <li><a class="dropdown-item" href="{% url 'attendance:overtime_create' %}?employe={{ employee.pk }}"><i class="bi bi-alarm me-2"></i>Saisir des heures supplémentaires</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'employees:work_attestation' employee.pk %}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-check me-2"></i>Attestation de travail (PDF)</a></li>
+            {% if employee.exit_date %}<li><a class="dropdown-item" href="{% url 'employees:work_certificate' employee.pk %}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-text me-2"></i>Certificat de travail (PDF)</a></li>{% endif %}
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <form method="post" action="{% url 'employees:account' employee.pk %}" data-confirm="{% if employee.user %}Générer un nouveau mot de passe temporaire pour {{ employee.full_name }} ?{% else %}Créer un compte d'accès pour {{ employee.full_name }} ?{% endif %}">
+                {% csrf_token %}
+                <button class="dropdown-item" type="submit"><i class="bi bi-key me-2"></i>{% if employee.user %}Réinitialiser l'accès{% else %}Créer un accès à l'application{% endif %}</button>
+              </form>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{% url 'employees:delete' employee.pk %}"><i class="bi bi-trash me-2"></i>Supprimer la fiche</a></li>
+          </ul>
+        </div>
+        <a class="btn btn-primary" href="{% url 'employees:update' employee.pk %}"><i class="bi bi-pencil"></i> Modifier</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs-modern" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#apercu" type="button" role="tab">Aperçu</button></li>
+    {% if can_view_sensitive %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#contrats" type="button" role="tab">Contrats <span class="badge text-bg-light border">{{ contracts|length }}</span></button></li>{% endif %}
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab">Documents <span class="badge text-bg-light border">{{ documents|length }}</span></button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#conges" type="button" role="tab">Congés</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#presences" type="button" role="tab">Présences</button></li>
+    {% if can_view_sensitive %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#paie" type="button" role="tab">Paie</button></li>{% endif %}
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#talents" type="button" role="tab">Évaluations & formations</button></li>
+  </ul>
+</div>
+
+<div class="tab-content">
+  {# ----------------------------------------------------------------- Aperçu #}
+  <div class="tab-pane fade show active" id="apercu" role="tabpanel">
+    <div class="row g-3">
+      <div class="col-lg-4">
+        <div class="card mb-3">
+          <div class="card-header"><h2 class="card-title"><i class="bi bi-person-vcard"></i> Coordonnées</h2></div>
+          <div class="card-body">
+            <dl class="kv">
+              <dt>E-mail</dt><dd><a href="mailto:{{ employee.email }}">{{ employee.email }}</a></dd>
+              <dt>Téléphone</dt><dd>{{ employee.phone|default:"—" }}</dd>
+              {% if can_view_sensitive %}
+              <dt>E-mail perso.</dt><dd>{{ employee.personal_email|default:"—" }}</dd>
+              <dt>Adresse</dt><dd>{{ employee.address|default:"—" }}{% if employee.city %}, {{ employee.city }}{% endif %}</dd>
+              {% endif %}
+              <dt>Lieu de travail</dt><dd>{{ employee.work_location|default:"—" }}</dd>
+            </dl>
+          </div>
+        </div>
+        <div class="card mb-3">
+          <div class="card-header"><h2 class="card-title"><i class="bi bi-diagram-2"></i> Hiérarchie</h2></div>
+          <div class="card-body">
+            <div class="small text-body-secondary mb-1">Responsable</div>
+            {% if employee.manager %}
+              {% with m=employee.manager %}
+              {% if user|can_view:m %}<a class="person text-decoration-none mb-3" href="{% url 'employees:detail' m.pk %}">{% else %}<div class="person mb-3">{% endif %}
+                <span class="avatar avatar-sm">{{ m.full_name|initials }}</span><span><span class="person-name d-block">{{ m }}</span><span class="person-meta">{{ m.position|default:"" }}</span></span>
+              {% if user|can_view:m %}</a>{% else %}</div>{% endif %}
+              {% endwith %}
+            {% else %}<p class="text-body-secondary">—</p>{% endif %}
+            <div class="small text-body-secondary mb-1 mt-2">Équipe directe ({{ subordinates|length }})</div>
+            {% for s in subordinates %}
+              {% if user|can_view:s %}<a class="person text-decoration-none mb-2" href="{% url 'employees:detail' s.pk %}">{% else %}<div class="person mb-2">{% endif %}
+                <span class="avatar avatar-sm">{{ s.full_name|initials }}</span><span><span class="person-name d-block">{{ s }}</span><span class="person-meta">{{ s.position|default:"" }}</span></span>
+              {% if user|can_view:s %}</a>{% else %}</div>{% endif %}
+            {% empty %}<p class="small text-body-secondary mb-0">Aucun collaborateur rattaché.</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="card mb-3">
+          <div class="card-header"><h2 class="card-title"><i class="bi bi-briefcase"></i> Informations professionnelles</h2></div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <dl class="kv">
+                  <dt>Matricule</dt><dd>{{ employee.employee_id }}</dd>
+                  <dt>Poste</dt><dd>{{ employee.position|default:"—" }}</dd>
+                  <dt>Département</dt><dd>{{ employee.department|default:"—" }}</dd>
+                  <dt>Date d'embauche</dt><dd>{{ employee.hire_date|date:"d/m/Y" }}</dd>
+                  <dt>Ancienneté</dt><dd>{{ employee.seniority }}</dd>
+                </dl>
+              </div>
+              <div class="col-md-6">
+                <dl class="kv">
+                  {% with c=employee.current_contract %}
+                  <dt>Contrat</dt><dd>{% if c %}{{ c.get_contract_type_display }}{% else %}—{% endif %}</dd>
+                  {% if c.end_date %}<dt>Fin de contrat</dt><dd>{{ c.end_date|date:"d/m/Y" }}{% if c.is_expiring_soon %} <span class="badge bg-warning-subtle text-warning-emphasis">J-{{ c.days_until_end }}</span>{% endif %}</dd>{% endif %}
+                  {% if c.in_trial %}<dt>Période d'essai</dt><dd>jusqu'au {{ c.trial_end_date|date:"d/m/Y" }}</dd>{% endif %}
+                  {% if can_view_sensitive and c %}<dt>Salaire de base</dt><dd>{{ c.base_salary|money }}</dd>{% endif %}
+                  {% endwith %}
+                  {% if employee.exit_date %}<dt>Date de sortie</dt><dd>{{ employee.exit_date|date:"d/m/Y" }}</dd><dt>Motif</dt><dd>{{ employee.exit_reason|default:"—" }}</dd>{% endif %}
+                  <dt>Compte d'accès</dt><dd>{% if employee.user %}<i class="bi bi-check-circle-fill text-success"></i> {{ employee.user.get_role_display }}{% else %}<span class="text-body-secondary">Aucun</span>{% endif %}</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% if can_view_sensitive %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="card h-100">
+              <div class="card-header"><h2 class="card-title"><i class="bi bi-person-lines-fill"></i> État civil</h2></div>
+              <div class="card-body">
+                <dl class="kv">
+                  <dt>Genre</dt><dd>{{ employee.get_gender_display|default:"—" }}</dd>
+                  <dt>Naissance</dt><dd>{{ employee.date_of_birth|date:"d/m/Y"|default:"—" }}{% if employee.age %} ({{ employee.age }} ans){% endif %}{% if employee.place_of_birth %} à {{ employee.place_of_birth }}{% endif %}</dd>
+                  <dt>Nationalité</dt><dd>{{ employee.nationality|default:"—" }}</dd>
+                  <dt>Pièce d'identité</dt><dd>{{ employee.national_id|default:"—" }}</dd>
+                  <dt>Situation</dt><dd>{{ employee.get_marital_status_display|default:"—" }} · {{ employee.children_count }} enfant(s)</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card h-100">
+              <div class="card-header"><h2 class="card-title"><i class="bi bi-bank"></i> Paie & urgence</h2></div>
+              <div class="card-body">
+                <dl class="kv">
+                  <dt>N° sécurité sociale</dt><dd>{{ employee.social_security_number|default:"—" }}</dd>
+                  <dt>Parts fiscales</dt><dd>{{ employee.tax_shares }}</dd>
+                  <dt>Paiement</dt><dd>{{ employee.get_payment_method_display }}</dd>
+                  <dt>Banque</dt><dd>{{ employee.bank_name|default:"—" }}</dd>
+                  <dt>Compte</dt><dd>{{ employee.bank_account|default:"—" }}</dd>
+                  <dt>Contact d'urgence</dt><dd>{% if employee.emergency_contact_name %}{{ employee.emergency_contact_name }} ({{ employee.emergency_contact_relation|default:"—" }})<br>{{ employee.emergency_contact_phone }}{% else %}—{% endif %}</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% if can_edit and employee.notes %}
+        <div class="card mt-3"><div class="card-body"><div class="small fw-semibold text-body-secondary mb-1"><i class="bi bi-lock"></i> Notes internes RH</div>{{ employee.notes|linebreaksbr }}</div></div>
+        {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# --------------------------------------------------------------- Contrats #}
+  {% if can_view_sensitive %}
+  <div class="tab-pane fade" id="contrats" role="tabpanel">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-file-earmark-text"></i> Historique des contrats</h2>
+        {% if can_edit %}<a class="btn btn-sm btn-primary" href="{% url 'employees:contract_create' employee.pk %}"><i class="bi bi-plus-lg"></i> Nouveau contrat</a>{% endif %}</div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Référence</th><th>Type</th><th>Poste</th><th>Début</th><th>Fin</th><th>Salaire de base</th><th>Statut</th><th class="text-end">Actions</th></tr></thead>
+          <tbody>
+            {% for c in contracts %}
+            <tr>
+              <td><code>{{ c.reference }}</code></td>
+              <td>{{ c.get_contract_type_display }}</td>
+              <td>{{ c.position|default:"—" }}</td>
+              <td>{{ c.start_date|date:"d/m/Y" }}</td>
+              <td>{{ c.end_date|date:"d/m/Y"|default:"—" }}</td>
+              <td>{{ c.base_salary|money }}</td>
+              <td>{{ c.status|status_badge:c.get_status_display }}</td>
+              <td class="table-actions">
+                {% if c.document %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'employees:contract_download' c.pk %}" title="Télécharger"><i class="bi bi-download"></i></a>{% endif %}
+                {% if can_edit %}<a class="btn btn-sm btn-outline-primary" href="{% url 'employees:contract_update' c.pk %}" title="Modifier"><i class="bi bi-pencil"></i></a>
+                <a class="btn btn-sm btn-outline-danger" href="{% url 'employees:contract_delete' c.pk %}" title="Supprimer"><i class="bi bi-trash"></i></a>{% endif %}
+              </td>
+            </tr>
+            {% empty %}<tr><td colspan="8"><div class="empty-state py-4"><i class="bi bi-file-earmark"></i>Aucun contrat enregistré.</div></td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# -------------------------------------------------------------- Documents #}
+  <div class="tab-pane fade" id="documents" role="tabpanel">
+    <div class="row g-3">
+      <div class="{% if document_form %}col-lg-8{% else %}col-12{% endif %}">
+        <div class="card">
+          <div class="card-header"><h2 class="card-title"><i class="bi bi-folder2-open"></i> Documents</h2></div>
+          <div class="list-group list-group-flush">
+            {% for d in documents %}
+              <div class="list-group-item d-flex align-items-center gap-3">
+                <i class="bi bi-file-earmark-text fs-4 text-primary"></i>
+                <div class="flex-grow-1 min-w-0">
+                  <div class="fw-semibold">{{ d.title }}</div>
+                  <div class="small text-body-secondary">{{ d.get_category_display }} · ajouté le {{ d.created_at|date:"d/m/Y" }}{% if d.expires_on %} · expire le {{ d.expires_on|date:"d/m/Y" }}{% endif %}
+                    {% if d.is_expired %}<span class="badge bg-danger-subtle text-danger-emphasis">Expiré</span>{% elif d.expires_soon %}<span class="badge bg-warning-subtle text-warning-emphasis">Expire bientôt</span>{% endif %}
+                    {% if can_edit and not d.visible_to_employee %}<span class="badge bg-secondary-subtle text-secondary-emphasis"><i class="bi bi-eye-slash"></i> RH uniquement</span>{% endif %}
+                  </div>
+                </div>
+                <a class="btn btn-sm btn-outline-secondary" href="{% url 'employees:document_download' d.pk %}"><i class="bi bi-download"></i></a>
+                {% if can_edit %}
+                <form method="post" action="{% url 'employees:document_delete' d.pk %}" data-confirm="Supprimer le document « {{ d.title }} » ?">{% csrf_token %}<button class="btn btn-sm btn-outline-danger" type="submit" title="Supprimer"><i class="bi bi-trash"></i></button></form>
+                {% endif %}
+              </div>
+            {% empty %}<div class="empty-state"><i class="bi bi-folder2"></i>Aucun document.</div>{% endfor %}
+          </div>
+        </div>
+      </div>
+      {% if document_form %}
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header"><h2 class="card-title"><i class="bi bi-cloud-upload"></i> Ajouter un document</h2></div>
+          <div class="card-body">
+            <form method="post" action="{% url 'employees:document_upload' employee.pk %}" enctype="multipart/form-data">
+              {% csrf_token %}
+              {% with form=document_form %}{% include 'includes/form_fields.html' %}{% endwith %}
+              <button class="btn btn-primary w-100 mt-3" type="submit"><i class="bi bi-upload"></i> Téléverser</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ----------------------------------------------------------------- Congés #}
+  <div class="tab-pane fade" id="conges" role="tabpanel">
+    <div class="row g-3 mb-3">
+      {% for b in balances %}
+        <div class="col-sm-6 col-lg-3">
+          <div class="balance-card">
+            <div class="small text-body-secondary"><span class="color-swatch me-1" style="background:{{ b.leave_type.color }};width:10px;height:10px"></span>{{ b.leave_type }}</div>
+            <div class="balance-value">{{ b.remaining|days }}</div>
+            <div class="small text-body-secondary">restants sur {{ b.total|days }} · {{ b.used|days }} pris · {{ b.pending|days }} en attente</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="card">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-calendar2-week"></i> Dernières demandes</h2></div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Type</th><th>Période</th><th>Jours</th><th>Statut</th><th></th></tr></thead>
+          <tbody>
+            {% for r in leave_requests %}
+            <tr><td>{{ r.leave_type }}</td><td>{{ r.start_date|date:"d/m/Y" }} → {{ r.end_date|date:"d/m/Y" }}</td><td>{{ r.days|days }}</td><td>{{ r.status|status_badge:r.get_status_display }}</td><td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{% url 'leaves:detail' r.pk %}"><i class="bi bi-eye"></i></a></td></tr>
+            {% empty %}<tr><td colspan="5"><div class="empty-state py-4"><i class="bi bi-calendar"></i>Aucune demande.</div></td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {# -------------------------------------------------------------- Présences #}
+  <div class="tab-pane fade" id="presences" role="tabpanel">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-clock-history"></i> 30 derniers jours</h2></div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Date</th><th>Arrivée</th><th>Départ</th><th>Heures</th><th>Statut</th><th>Remarque</th></tr></thead>
+          <tbody>
+            {% for a in attendances %}
+            <tr><td>{{ a.date|date:"D d/m/Y" }}</td><td>{{ a.check_in|time:"H:i"|default:"—" }}</td><td>{{ a.check_out|time:"H:i"|default:"—" }}</td><td>{{ a.worked_hours|default:"—" }}</td><td>{{ a.status|status_badge:a.get_status_display }}</td><td class="small text-body-secondary">{{ a.note }}</td></tr>
+            {% empty %}<tr><td colspan="6"><div class="empty-state py-4"><i class="bi bi-clock"></i>Aucun pointage sur la période.</div></td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {# ------------------------------------------------------------------- Paie #}
+  {% if can_view_sensitive %}
+  <div class="tab-pane fade" id="paie" role="tabpanel">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-cash-stack"></i> Bulletins de paie</h2>
+        {% if can_edit %}<a class="btn btn-sm btn-outline-primary" href="{% url 'payroll:item_list' %}?employee={{ employee.pk }}">Primes et retenues</a>{% endif %}</div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Période</th><th>Brut</th><th>Cotisations</th><th>Impôt</th><th>Net à payer</th><th>Statut</th><th></th></tr></thead>
+          <tbody>
+            {% for p in payslips %}
+              {% if can_edit or p.period.status != 'DRAFT' %}
+              <tr><td>{{ p.period.label }}</td><td>{{ p.gross_salary|money }}</td><td>{{ p.employee_contributions|money }}</td><td>{{ p.income_tax|money }}</td><td class="fw-semibold">{{ p.net_salary|money }}</td><td>{{ p.period.status|status_badge:p.period.get_status_display }}</td>
+                <td class="table-actions"><a class="btn btn-sm btn-outline-secondary" href="{% url 'payroll:payslip_detail' p.pk %}"><i class="bi bi-eye"></i></a> <a class="btn btn-sm btn-outline-danger" href="{% url 'payroll:payslip_pdf' p.pk %}" target="_blank" rel="noopener"><i class="bi bi-file-pdf"></i></a></td></tr>
+              {% endif %}
+            {% empty %}<tr><td colspan="7"><div class="empty-state py-4"><i class="bi bi-file-earmark-text"></i>Aucun bulletin.</div></td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# -------------------------------------------------- Évaluations & formations #}
+  <div class="tab-pane fade" id="talents" role="tabpanel">
+    <div class="row g-3">
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-header"><h2 class="card-title"><i class="bi bi-clipboard-check"></i> Évaluations</h2></div>
+          <ul class="list-group list-group-flush list-compact">
+            {% for r in reviews %}
+              <li class="list-group-item d-flex justify-content-between align-items-center"><a href="{% url 'performance:review_detail' r.pk %}">{{ r.cycle }}</a><span>{% if r.overall_rating %}<span class="stars">{% for i in "12345" %}{% if forloop.counter <= r.overall_rating %}★{% else %}☆{% endif %}{% endfor %}</span>{% endif %} {{ r.status|status_badge:r.get_status_display }}</span></li>
+            {% empty %}<li class="list-group-item small text-body-secondary">Aucune évaluation.</li>{% endfor %}
+          </ul>
+          <div class="card-header border-top"><h2 class="card-title"><i class="bi bi-bullseye"></i> Objectifs</h2></div>
+          <ul class="list-group list-group-flush list-compact">
+            {% for o in objectives %}
+              <li class="list-group-item"><div class="d-flex justify-content-between small"><span class="fw-semibold">{{ o.title }}</span>{{ o.status|status_badge:o.get_status_display }}</div>
+                <div class="progress mt-1" style="height:5px" role="progressbar" aria-label="Avancement : {{ o.title }}" aria-valuenow="{{ o.progress }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:{{ o.progress }}%"></div></div></li>
+            {% empty %}<li class="list-group-item small text-body-secondary">Aucun objectif.</li>{% endfor %}
+          </ul>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-header"><h2 class="card-title"><i class="bi bi-mortarboard"></i> Formations</h2></div>
+          <ul class="list-group list-group-flush list-compact">
+            {% for t in trainings %}
+              <li class="list-group-item d-flex justify-content-between align-items-center"><span><span class="fw-semibold">{{ t.training }}</span><br><span class="small text-body-secondary">{{ t.training.start_date|date:"d/m/Y" }} · {{ t.training.duration_hours }} h</span></span>{{ t.status|status_badge:t.get_status_display }}</li>
+            {% empty %}<li class="list-group-item small text-body-secondary">Aucune formation suivie.</li>{% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

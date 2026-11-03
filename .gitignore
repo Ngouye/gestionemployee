@@ -1,0 +1,22 @@
+# Environnement et secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Données locales (ne jamais versionner)
+*.sqlite3
+legacy/
+media/
+staticfiles/
+
+# Éditeurs
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

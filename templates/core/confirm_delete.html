@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="card border-danger-subtle">
+      <div class="card-body p-4 text-center">
+        <div class="stat-icon tone-danger mx-auto mb-3" style="width:64px;height:64px;border-radius:16px;display:grid;place-items:center;font-size:1.8rem"><i class="bi bi-trash3"></i></div>
+        <h1 class="h4 fw-bold">Confirmer la suppression</h1>
+        <p class="text-body-secondary mb-1">Vous êtes sur le point de supprimer :</p>
+        <p class="fs-5 fw-semibold">{{ object }}</p>
+        {% block warning %}<p class="small text-danger"><i class="bi bi-exclamation-triangle"></i> Cette action est définitive.</p>{% endblock %}
+        <form method="post" class="d-flex justify-content-center gap-2 mt-4">
+          {% csrf_token %}
+          <a class="btn btn-outline-secondary" href="{{ list_url }}">Annuler</a>
+          <button class="btn btn-danger" type="submit"><i class="bi bi-trash"></i> Supprimer définitivement</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

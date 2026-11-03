@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Évaluations & objectifs{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-graph-up-arrow"></i> Évaluations & objectifs</h1>
+    <p class="page-subtitle">Suivez vos objectifs et vos entretiens annuels.</p>
+  </div>
+</div>
+
+{% if to_do %}
+<div class="card mb-4">
+  <div class="card-header"><h2 class="card-title"><i class="bi bi-clipboard-check"></i> Évaluations à réaliser (en tant qu'évaluateur)</h2></div>
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>Collaborateur</th><th>Campagne</th><th>Statut</th><th class="text-end"></th></tr></thead>
+      <tbody>
+        {% for r in to_do %}
+        <tr><td class="fw-semibold">{{ r.employee }}</td><td>{{ r.cycle }}</td><td>{{ r.status|status_badge:r.get_status_display }}</td>
+          <td class="table-actions"><a class="btn btn-sm {% if r.status == 'PENDING' %}btn-primary{% else %}btn-outline-secondary{% endif %}" href="{% url 'performance:review_detail' r.pk %}">{% if r.status == 'PENDING' %}Évaluer{% else %}Consulter{% endif %}</a></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-bullseye"></i> Mes objectifs</h2></div>
+      <div class="list-group list-group-flush">
+        {% for o in objectives %}
+          <div class="list-group-item">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div class="min-w-0">
+                <div class="fw-semibold">{{ o.title }}</div>
+                <div class="small text-body-secondary">{% if o.due_date %}Échéance : {{ o.due_date|date:"d/m/Y" }}{% endif %}{% if o.cycle %} · {{ o.cycle }}{% endif %}</div>
+                {% if o.description %}<div class="small mt-1">{{ o.description }}</div>{% endif %}
+              </div>
+              <div class="text-end">{{ o.status|status_badge:o.get_status_display }}<div><a class="small" href="{% url 'performance:objective_update' o.pk %}?next={{ request.path }}">Mettre à jour</a></div></div>
+            </div>
+            <div class="d-flex align-items-center gap-2 mt-2">
+              <div class="progress flex-grow-1" style="height:6px" role="progressbar" aria-label="Avancement : {{ o.title }}" aria-valuenow="{{ o.progress }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width: {{ o.progress }}%"></div></div>
+              <small class="fw-semibold">{{ o.progress }} %</small>
+            </div>
+          </div>
+        {% empty %}<div class="empty-state"><i class="bi bi-bullseye"></i>Aucun objectif ne vous a encore été fixé.</div>{% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-clipboard-data"></i> Mes évaluations</h2></div>
+      <ul class="list-group list-group-flush list-compact">
+        {% for r in my_reviews %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div><a class="fw-semibold" href="{% url 'performance:review_detail' r.pk %}">{{ r.cycle }}</a><div class="small text-body-secondary">Évaluateur : {{ r.reviewer.display_name|default:"—" }}</div></div>
+            <div class="text-end">{{ r.status|status_badge:r.get_status_display }}{% if r.status == 'COMPLETED' and r.overall_rating %}<div class="stars small">{% for n in "12345" %}{% if forloop.counter <= r.overall_rating %}★{% else %}☆{% endif %}{% endfor %}</div>{% endif %}</div>
+          </li>
+        {% empty %}<li class="list-group-item small text-body-secondary">Aucune évaluation pour le moment.</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

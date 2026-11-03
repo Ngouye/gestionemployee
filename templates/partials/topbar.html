@@ -1,0 +1,91 @@
+<header class="topbar">
+  <button class="icon-btn d-lg-none" type="button" data-sidebar-toggle aria-label="Ouvrir le menu"><i class="bi bi-list"></i></button>
+
+  <form class="topbar-search d-none d-md-block" action="{% url 'employees:directory' %}" method="get" role="search">
+    <div class="input-group">
+      <span class="input-group-text bg-body"><i class="bi bi-search"></i></span>
+      <input class="form-control" type="search" name="q" placeholder="Rechercher un collaborateur…" aria-label="Rechercher un collaborateur">
+    </div>
+  </form>
+
+  <div class="ms-auto d-flex align-items-center gap-2">
+    {% if current_employee %}
+      <form method="post" action="{% url 'attendance:punch' %}" class="d-none d-sm-block">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        {% if not punch_record or not punch_record.check_in %}
+          <button class="btn btn-sm btn-success" name="action" value="in" type="submit"><i class="bi bi-box-arrow-in-right"></i> Pointer l'arrivée</button>
+        {% elif not punch_record.check_out %}
+          <button class="btn btn-sm btn-outline-secondary" name="action" value="out" type="submit"><i class="bi bi-box-arrow-right"></i> Pointer le départ</button>
+        {% else %}
+          <span class="badge rounded-pill bg-success-subtle text-success-emphasis border border-success-subtle px-3 py-2"><i class="bi bi-check2-circle"></i> Journée pointée</span>
+        {% endif %}
+      </form>
+    {% endif %}
+
+    <button class="icon-btn" type="button" data-theme-toggle aria-label="Changer de thème" title="Thème clair / sombre"><i data-theme-icon class="bi bi-moon-stars"></i></button>
+
+    <div class="dropdown">
+      <button class="icon-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+        <i class="bi bi-bell"></i>
+        {% if unread_notifications_count %}<span class="dot">{{ unread_notifications_count }}</span>{% endif %}
+      </button>
+      <div class="dropdown-menu dropdown-menu-end notif-menu p-0">
+        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+          <strong>Notifications</strong>
+          {% if unread_notifications_count %}
+          <form method="post" action="{% url 'core:notifications_mark_all' %}">
+            {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button class="btn btn-link btn-sm p-0" type="submit">Tout marquer comme lu</button>
+          </form>
+          {% endif %}
+        </div>
+        <div style="max-height: 360px; overflow-y: auto;">
+          {% for n in recent_notifications %}
+            <a class="dropdown-item notif-item {% if not n.is_read %}unread{% endif %}" href="{% url 'core:notification_open' n.pk %}">
+              <div class="d-flex gap-2">
+                <i class="bi {{ n.icon }} text-{{ n.level }} mt-1"></i>
+                <div class="min-w-0">
+                  <div class="fw-semibold small">{{ n.title }}</div>
+                  {% if n.message %}<div class="small text-body-secondary text-truncate-2">{{ n.message }}</div>{% endif %}
+                  <div class="small text-body-tertiary">il y a {{ n.created_at|timesince }}</div>
+                </div>
+              </div>
+            </a>
+          {% empty %}
+            <div class="text-center text-body-secondary small py-4"><i class="bi bi-bell-slash d-block fs-4 mb-1"></i>Aucune notification</div>
+          {% endfor %}
+        </div>
+        <a class="dropdown-item text-center small py-2" href="{% url 'core:notifications' %}">Voir toutes les notifications</a>
+      </div>
+    </div>
+
+    <div class="dropdown">
+      <a class="user-chip text-decoration-none text-body" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+        <span class="avatar avatar-sm">
+          {% if current_employee.photo %}<img src="{% url 'employees:photo' current_employee.pk %}" alt="">{% else %}{{ user.display_name|initials }}{% endif %}
+        </span>
+        <span class="d-none d-md-block">
+          <span class="name d-block">{{ user.first_name|default:user.email }}</span>
+          <span class="role d-block">{{ user.get_role_display }}</span>
+        </span>
+        <i class="bi bi-chevron-down small text-body-secondary d-none d-md-inline"></i>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li class="px-3 py-2 small text-body-secondary">{{ user.email }}</li>
+        <li><hr class="dropdown-divider"></li>
+        {% if current_employee %}<li><a class="dropdown-item" href="{% url 'employees:my_profile' %}"><i class="bi bi-person-badge me-2"></i>Mon profil</a></li>{% endif %}
+        <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person-circle me-2"></i>Mon compte</a></li>
+        <li><a class="dropdown-item" href="{% url 'accounts:password_change' %}"><i class="bi bi-key me-2"></i>Changer de mot de passe</a></li>
+        {% if user.is_superuser %}<li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-tools me-2"></i>Administration technique</a></li>{% endif %}
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <form method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button class="dropdown-item text-danger" type="submit"><i class="bi bi-box-arrow-right me-2"></i>Déconnexion</button>
+          </form>
+        </li>
+      </ul>
+    </div>
+  </div>
+</header>

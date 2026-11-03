@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes bulletins de paie{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-file-earmark-text"></i> Mes bulletins de paie</h1>
+    <p class="page-subtitle">Conservez vos bulletins sans limitation de durée.</p>
+  </div>
+</div>
+<div class="row g-3">
+  {% for p in payslips %}
+  <div class="col-sm-6 col-lg-4 col-xxl-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="fw-bold">{{ p.period.label }}</div>{{ p.period.status|status_badge:p.period.get_status_display }}
+        </div>
+        <div class="small text-body-secondary">Net à payer</div>
+        <div class="fs-4 fw-bold mb-1">{{ p.net_salary|money }}</div>
+        <div class="small text-body-secondary mb-3">Brut : {{ p.gross_salary|money }}</div>
+        <div class="d-flex gap-2">
+          <a class="btn btn-sm btn-outline-secondary flex-fill" href="{% url 'payroll:payslip_detail' p.pk %}"><i class="bi bi-eye"></i> Détail</a>
+          <a class="btn btn-sm btn-primary flex-fill" href="{% url 'payroll:payslip_pdf' p.pk %}" target="_blank" rel="noopener"><i class="bi bi-file-pdf"></i> PDF</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12"><div class="card"><div class="empty-state"><i class="bi bi-file-earmark-text"></i>Aucun bulletin disponible pour le moment.</div></div></div>
+  {% endfor %}
+</div>
+{% if page_obj.paginator.num_pages > 1 %}<div class="card mt-3">{% include 'partials/pagination.html' %}</div>{% endif %}
+{% endblock %}

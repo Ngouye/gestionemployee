@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Mon compte{% endblock %}
+
+{% block content %}
+<div class="page-header"><h1 class="page-title"><i class="bi bi-person-circle"></i> Mon compte</h1></div>
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-person"></i> Informations du compte</h2></div>
+      <div class="card-body">
+        <dl class="kv mb-4">
+          <dt>E-mail de connexion</dt><dd>{{ user.email }}</dd>
+          <dt>Rôle</dt><dd>{{ user.role|status_badge:user.get_role_display }}</dd>
+          <dt>Dernière connexion</dt><dd>{{ user.last_login|date:"d/m/Y H:i"|default:"—" }}</dd>
+          <dt>Fiche employé</dt><dd>{% if current_employee %}<a href="{% url 'employees:my_profile' %}">{{ current_employee }} ({{ current_employee.employee_id }})</a>{% else %}<span class="text-body-secondary">Non rattaché</span>{% endif %}</dd>
+        </dl>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% include 'includes/form_fields.html' %}
+          <div class="form-actions">
+            <a class="btn btn-outline-secondary" href="{% url 'accounts:password_change' %}"><i class="bi bi-key"></i> Changer de mot de passe</a>
+            <button class="btn btn-primary" type="submit">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-braces"></i> Accès API</h2></div>
+      <div class="card-body">
+        <p class="small text-body-secondary">Le jeton API permet à un logiciel tiers (application mobile, outil de reporting, intégration) d'accéder à vos données via l'API REST. Ne le partagez jamais.</p>
+        {% if api_token %}
+          <div class="input-group mb-3">
+            <input class="form-control font-monospace" type="text" value="{{ api_token.key }}" readonly aria-label="Jeton API">
+            <button class="btn btn-outline-secondary" type="button" data-copy="{{ api_token.key }}"><i class="bi bi-clipboard"></i> Copier</button>
+          </div>
+        {% else %}
+          <p class="small">Aucun jeton généré.</p>
+        {% endif %}
+        <form method="post" action="{% url 'accounts:api_token' %}" data-confirm="Générer un nouveau jeton ? L'ancien cessera de fonctionner.">
+          {% csrf_token %}
+          <button class="btn btn-outline-primary" type="submit"><i class="bi bi-arrow-repeat"></i> {% if api_token %}Régénérer{% else %}Générer{% endif %} le jeton</button>
+        </form>
+        <p class="small text-body-secondary mt-3 mb-0">Utilisation : en-tête <code>Authorization: Token &lt;jeton&gt;</code> sur <code>/api/v1/</code>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

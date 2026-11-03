@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Rapport de présence{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-bar-chart"></i> Rapport de présence — {{ month_label }}</h1>
+    <p class="page-subtitle">{{ expected }} jour(s) ouvré(s) écoulé(s) dans la période. Le taux exclut les jours de congé approuvés.</p>
+  </div>
+  <div class="page-actions">
+    <form method="get" class="d-flex gap-2">
+      <select class="form-select" name="mois" data-autosubmit aria-label="Mois">{% for value, label in months %}<option value="{{ value }}" {% if value == month %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+      <select class="form-select" name="annee" data-autosubmit aria-label="Année">{% for y in years %}<option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>{% endfor %}</select>
+    </form>
+    <a class="btn btn-outline-success" href="?mois={{ month }}&annee={{ year }}&export=xlsx"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+  </div>
+</div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr><th>Employé</th><th class="text-center">Jours travaillés</th><th class="text-center">Retards</th><th class="text-center">Télétravail</th><th class="text-center">Absences</th><th class="text-center">Congés</th><th class="text-center">Heures</th><th style="min-width:160px">Taux de présence</th></tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td><a class="fw-semibold text-decoration-none" href="{% url 'employees:detail' r.employee.pk %}#presences">{{ r.employee }}</a><div class="small text-body-secondary">{{ r.employee.department|default:"" }}</div></td>
+          <td class="text-center">{{ r.worked }}</td>
+          <td class="text-center">{% if r.late %}<span class="text-warning-emphasis fw-semibold">{{ r.late }}</span>{% else %}0{% endif %}</td>
+          <td class="text-center">{{ r.remote }}</td>
+          <td class="text-center">{% if r.absent %}<span class="text-danger fw-semibold">{{ r.absent }}</span>{% else %}0{% endif %}</td>
+          <td class="text-center">{{ r.leave }}</td>
+          <td class="text-center">{{ r.hours|floatformat:1 }}</td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="progress flex-grow-1" style="height:6px" role="progressbar" aria-label="Taux de présence de {{ r.employee }}" aria-valuenow="{{ r.rate }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar {% if r.rate < 80 %}bg-warning{% endif %}" style="width: {{ r.rate }}%"></div></div>
+              <small class="fw-semibold" style="width:42px">{{ r.rate }} %</small>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8"><div class="empty-state"><i class="bi bi-people"></i>Aucun employé.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

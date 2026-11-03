@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Bulletin {{ payslip.number }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav aria-label="Fil d'Ariane"><ol class="breadcrumb">
+      {% if user.is_hr %}<li class="breadcrumb-item"><a href="{% url 'payroll:period_detail' payslip.period.pk %}">Paie {{ payslip.period.label }}</a></li>
+      {% else %}<li class="breadcrumb-item"><a href="{% url 'payroll:my_payslips' %}">Mes bulletins</a></li>{% endif %}
+      <li class="breadcrumb-item active">{{ payslip.number }}</li></ol></nav>
+    <h1 class="page-title"><i class="bi bi-file-earmark-text"></i> Bulletin de paie — {{ payslip.period.label }}</h1>
+    <p class="page-subtitle">{{ payslip.employee_name }} · {{ payslip.position_title|default:"" }}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-outline-secondary" href="{% url 'payroll:payslip_pdf' payslip.pk %}?telecharger=1"><i class="bi bi-download"></i> Télécharger</a>
+    <a class="btn btn-primary" href="{% url 'payroll:payslip_pdf' payslip.pk %}" target="_blank" rel="noopener"><i class="bi bi-file-pdf"></i> Ouvrir le PDF</a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="card">
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Rubrique</th><th class="text-end">Base</th><th class="text-end">Taux</th><th class="text-end">Gains</th><th class="text-end">Retenues</th><th class="text-end">Part patronale</th></tr></thead>
+          <tbody>
+            {% for line in payslip.lines.all %}
+            <tr>
+              <td>{{ line.label }}</td>
+              <td class="text-end small">{% if line.base is not None %}{{ line.base|money:False }}{% endif %}</td>
+              <td class="text-end small">{% if line.rate %}{{ line.rate|floatformat:"-3" }} %{% endif %}</td>
+              <td class="text-end">{% if line.kind == 'EARNING' %}{{ line.amount|money:False }}{% endif %}</td>
+              <td class="text-end">{% if line.kind != 'EARNING' %}{% if line.amount or line.kind != 'CONTRIBUTION' %}{{ line.amount|money:False }}{% endif %}{% endif %}</td>
+              <td class="text-end text-body-secondary small">{% if line.employer_amount %}{{ line.employer_amount|money:False }}{% if line.employer_rate %} ({{ line.employer_rate|floatformat:"-3" }} %){% endif %}{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot class="fw-bold">
+            <tr><td>Totaux</td><td></td><td></td><td class="text-end">{{ payslip.gross_salary|money:False }}</td><td class="text-end">{{ payslip.total_deductions|money:False }}</td><td class="text-end">{{ payslip.employer_contributions|money:False }}</td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-4">
+    <div class="card punch-card mb-3"><div class="card-body"><div class="small opacity-75">Net à payer</div><div class="clock">{{ payslip.net_salary|money }}</div><div class="small opacity-75">{{ payslip.employee.get_payment_method_display }}{% if payslip.period.payment_date %} · payé le {{ payslip.period.payment_date|date:"d/m/Y" }}{% endif %}</div></div></div>
+    <div class="card">
+      <div class="card-body">
+        <dl class="kv">
+          <dt>Salaire de base</dt><dd>{{ payslip.base_salary|money }}</dd>
+          <dt>Salaire brut</dt><dd>{{ payslip.gross_salary|money }}</dd>
+          <dt>Cotisations salariales</dt><dd>− {{ payslip.employee_contributions|money }}</dd>
+          <dt>Revenu imposable</dt><dd>{{ payslip.taxable_salary|money }}</dd>
+          <dt>Impôt sur le revenu</dt><dd>− {{ payslip.income_tax|money }}</dd>
+          <dt>Autres retenues</dt><dd>− {{ payslip.other_deductions|money }}</dd>
+          <dt>Charges patronales</dt><dd>{{ payslip.employer_contributions|money }}</dd>
+          <dt>Coût employeur</dt><dd class="fw-bold">{{ payslip.employer_cost|money }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Demande de congé{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav aria-label="Fil d'Ariane"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{% url 'leaves:my_leaves' %}">Mes congés</a></li><li class="breadcrumb-item active">Nouvelle demande</li></ol></nav>
+    <h1 class="page-title">{{ form_title }}</h1>
+  </div>
+</div>
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-body p-4">
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          {% include 'includes/form_fields.html' %}
+          <div class="form-actions">
+            <a class="btn btn-outline-secondary" href="{% url 'leaves:my_leaves' %}">Annuler</a>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-send"></i> Envoyer la demande</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-wallet2"></i> Mes soldes disponibles</h2></div>
+      <ul class="list-group list-group-flush list-compact">
+        {% for b in balances %}
+          <li class="list-group-item d-flex justify-content-between"><span><span class="color-swatch me-1" style="background:{{ b.leave_type.color }};width:10px;height:10px"></span>{{ b.leave_type }}</span><strong>{{ b.remaining|days }}</strong></li>
+        {% empty %}<li class="list-group-item small text-body-secondary">Aucun solde.</li>{% endfor %}
+      </ul>
+      <div class="card-body small text-body-secondary border-top">
+        <i class="bi bi-info-circle"></i> Les jours sont comptés en jours ouvrés : les week-ends et jours fériés ne sont pas décomptés. Votre responsable est notifié dès l'envoi.
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

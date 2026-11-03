@@ -1,60 +1,44 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="fr">
+{% load static %}<!doctype html>
+<html lang="fr" data-bs-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EmployeeManager</title>
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- CSS principal -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    
-    <!-- Bloc pour CSS supplémentaires -->
-    {% block extra_css %}{% endblock %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ page_title|default:"Tableau de bord" }}{% endblock %} · {{ company.name }}</title>
+  <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('em-theme');
+        if (!t) { t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+        document.documentElement.setAttribute('data-bs-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <header class="topbar">
-        <h1>💼 EmployeeManager</h1>
-        <nav>
-            <a href="{% url 'employee_list' %}">Dashboard</a>
-            {% if user.is_authenticated %}
-                <form method="post" action="{% url 'logout' %}" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="nav-link-button">Déconnexion</button>
-                </form>
-            {% endif %}
-        </nav>
-    </header>
-    
-    <main class="container">
-        {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-            <li class="message {{ message.tags }}">{{ message }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-        
-        {% block content %}{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'partials/sidebar.html' %}
+  <div class="sidebar-backdrop" data-sidebar-close></div>
+  <div class="app-main">
+    {% include 'partials/topbar.html' %}
+    <main class="app-content">
+      {% include 'partials/messages.html' %}
+      {% block content %}{% endblock %}
     </main>
-    
-    <footer class="footer">
-        <p>© {{ now.year }} EmployeeManager</p>
+    <footer class="app-footer d-flex flex-wrap justify-content-between gap-2">
+      <span>© {% now "Y" %} {{ company.legal_name|default:company.name }}</span>
+      <span>{{ APP_NAME }} v{{ APP_VERSION }}</span>
     </footer>
-
-    <!-- Bloc pour JavaScript supplémentaires -->
-    {% block extra_js %}{% endblock %}
-    
-    <script>
-        console.log('Base template chargé avec succès');
-    </script>
+  </div>
+</div>
+{% endblock %}
+<script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/app.js' %}"></script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>

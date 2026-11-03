@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Note de frais{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-receipt"></i> {{ claim.title }}</h1>
+    <p class="page-subtitle">{{ claim.employee }} · soumise le {{ claim.created_at|date:"d/m/Y" }}</p>
+  </div>
+  <div class="page-actions">
+    {% if can_delete %}
+    <form method="post" action="{% url 'expenses:delete' claim.pk %}" data-confirm="Supprimer cette note de frais ?">{% csrf_token %}<button class="btn btn-outline-danger" type="submit"><i class="bi bi-trash"></i> Supprimer</button></form>
+    {% endif %}
+    {% if can_pay %}
+    <form method="post" action="{% url 'expenses:pay' claim.pk %}" data-confirm="Confirmer le remboursement de {{ claim.amount|money }} ?">{% csrf_token %}<button class="btn btn-primary" type="submit"><i class="bi bi-cash-coin"></i> Marquer comme remboursée</button></form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div><div class="small text-body-secondary">Montant</div><div class="fs-3 fw-bold">{{ claim.amount|money }}</div></div>
+          {{ claim.status|status_badge:claim.get_status_display }}
+        </div>
+        <dl class="kv">
+          <dt>Catégorie</dt><dd>{{ claim.category }}</dd>
+          <dt>Date de la dépense</dt><dd>{{ claim.expense_date|date:"d/m/Y" }}</dd>
+          <dt>Détails</dt><dd>{{ claim.description|default:"—"|linebreaksbr }}</dd>
+          <dt>Justificatif</dt><dd>{% if claim.receipt %}<a href="{% url 'expenses:receipt' claim.pk %}" target="_blank" rel="noopener"><i class="bi bi-paperclip"></i> Consulter le justificatif</a>{% else %}<span class="text-warning-emphasis">Aucun justificatif joint</span>{% endif %}</dd>
+          {% if claim.reviewed_by %}<dt>Traitée par</dt><dd>{{ claim.reviewed_by.display_name }} le {{ claim.reviewed_at|date:"d/m/Y" }}</dd><dt>Commentaire</dt><dd>{{ claim.review_comment|default:"—" }}</dd>{% endif %}
+          {% if claim.paid_at %}<dt>Remboursée le</dt><dd>{{ claim.paid_at|date:"d/m/Y" }}</dd>{% endif %}
+        </dl>
+      </div>
+    </div>
+  </div>
+  {% if can_review %}
+  <div class="col-lg-5">
+    <div class="card border-primary-subtle">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-check2-square"></i> Décision</h2></div>
+      <div class="card-body">
+        <form method="post" action="{% url 'expenses:decide' claim.pk %}">
+          {% csrf_token %}
+          <label class="form-label" for="comment">Commentaire <span class="small text-body-secondary">(obligatoire en cas de refus)</span></label>
+          <textarea class="form-control mb-3" id="comment" name="comment" rows="3"></textarea>
+          <div class="d-flex gap-2">
+            <button class="btn btn-success flex-fill" name="decision" value="approve"><i class="bi bi-check-lg"></i> Approuver</button>
+            <button class="btn btn-outline-danger flex-fill" name="decision" value="reject"><i class="bi bi-x-lg"></i> Refuser</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title"><i class="bi bi-bell"></i> Notifications</h1>
+  <div class="page-actions">
+    <form method="post" action="{% url 'core:notifications_mark_all' %}">
+      {% csrf_token %}
+      <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-check2-all"></i> Tout marquer comme lu</button>
+    </form>
+  </div>
+</div>
+<div class="card">
+  <div class="list-group list-group-flush">
+    {% for n in notifications %}
+      <a class="list-group-item list-group-item-action notif-item {% if not n.is_read %}unread{% endif %}" href="{% url 'core:notification_open' n.pk %}">
+        <div class="d-flex gap-3">
+          <i class="bi {{ n.icon }} text-{{ n.level }} fs-5"></i>
+          <div class="flex-grow-1 min-w-0">
+            <div class="d-flex justify-content-between gap-2"><strong>{{ n.title }}</strong><small class="text-body-secondary text-nowrap">{{ n.created_at|date:"d/m/Y H:i" }}</small></div>
+            {% if n.message %}<div class="small text-body-secondary">{{ n.message }}</div>{% endif %}
+          </div>
+        </div>
+      </a>
+    {% empty %}
+      <div class="empty-state"><i class="bi bi-bell-slash"></i>Vous n'avez aucune notification.</div>
+    {% endfor %}
+  </div>
+  {% include 'partials/pagination.html' %}
+</div>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Validations{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-check2-square"></i> Validations</h1>
+    <p class="page-subtitle">Demandes de votre équipe en attente de décision.</p>
+  </div>
+  <div class="page-actions"><a class="btn btn-outline-secondary" href="{% url 'leaves:calendar' %}"><i class="bi bi-calendar3"></i> Calendrier des absences</a></div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header"><h2 class="card-title"><i class="bi bi-calendar2-week"></i> Demandes de congé <span class="badge rounded-pill text-bg-secondary">{{ leaves|length }}</span></h2></div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr><th>Employé</th><th>Type</th><th>Période</th><th>Jours</th><th>Motif</th><th class="text-end">Décision</th></tr></thead>
+      <tbody>
+        {% for l in leaves %}
+        <tr>
+          <td><div class="person"><span class="avatar avatar-sm">{{ l.employee.full_name|initials }}</span><div><a class="person-name" href="{% url 'leaves:detail' l.pk %}">{{ l.employee }}</a><div class="person-meta">{{ l.employee.department|default:"" }}</div></div></div></td>
+          <td><span class="color-swatch me-1" style="background:{{ l.leave_type.color }};width:10px;height:10px"></span>{{ l.leave_type }}</td>
+          <td class="small">{{ l.start_date|date:"d/m/Y" }} → {{ l.end_date|date:"d/m/Y" }}</td>
+          <td>{{ l.days|days }}</td>
+          <td class="small text-body-secondary" style="max-width:220px">{{ l.reason|default:"—"|truncatechars:80 }}</td>
+          <td class="text-end">
+            <form method="post" action="{% url 'leaves:decide' l.pk %}" class="d-inline-flex gap-1">
+              {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+              <button class="btn btn-sm btn-success" name="decision" value="approve" title="Approuver"><i class="bi bi-check-lg"></i> Approuver</button>
+            </form>
+            <a class="btn btn-sm btn-outline-danger" href="{% url 'leaves:detail' l.pk %}#decision" title="Refuser (motif requis)"><i class="bi bi-x-lg"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty-state py-4"><i class="bi bi-check2-all"></i>Aucune demande de congé en attente.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2 class="card-title"><i class="bi bi-receipt"></i> Notes de frais <span class="badge rounded-pill text-bg-secondary">{{ expenses|length }}</span></h2></div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr><th>Employé</th><th>Objet</th><th>Catégorie</th><th>Date</th><th>Montant</th><th class="text-end">Décision</th></tr></thead>
+      <tbody>
+        {% for e in expenses %}
+        <tr>
+          <td><a class="fw-semibold" href="{% url 'expenses:detail' e.pk %}">{{ e.employee }}</a></td>
+          <td>{{ e.title }}</td>
+          <td>{{ e.category }}</td>
+          <td class="small">{{ e.expense_date|date:"d/m/Y" }}</td>
+          <td class="fw-semibold">{{ e.amount|money }}</td>
+          <td class="text-end">
+            <form method="post" action="{% url 'expenses:decide' e.pk %}" class="d-inline">
+              {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+              <button class="btn btn-sm btn-success" name="decision" value="approve"><i class="bi bi-check-lg"></i> Approuver</button>
+            </form>
+            <a class="btn btn-sm btn-outline-danger" href="{% url 'expenses:detail' e.pk %}" title="Refuser (motif requis)"><i class="bi bi-x-lg"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty-state py-4"><i class="bi bi-check2-all"></i>Aucune note de frais en attente.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

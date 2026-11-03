@@ -1,0 +1,42 @@
+{% extends 'core/crud_list.html' %}
+
+{% block list_actions %}
+  {% if user.is_hr %}
+  <a class="btn btn-outline-secondary" href="{% url 'employees:import' %}"><i class="bi bi-upload"></i> Importer</a>
+  <a class="btn btn-primary" href="{% url 'employees:create' %}"><i class="bi bi-person-plus"></i> Nouvel employé</a>
+  {% endif %}
+{% endblock %}
+
+{% block table %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr><th>Employé</th><th>Matricule</th><th>Poste</th><th>Département</th><th>Embauche</th>{% if user.is_hr %}<th>Contrat</th>{% endif %}<th>Statut</th><th class="text-end">Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for e in object_list %}
+      <tr>
+        <td>
+          <div class="person">
+            <span class="avatar">{% if e.photo %}<img src="{% url 'employees:photo' e.pk %}" alt="" loading="lazy">{% else %}{{ e.full_name|initials }}{% endif %}</span>
+            <div class="min-w-0"><a class="person-name" href="{% url 'employees:detail' e.pk %}">{{ e.full_name }}</a><div class="person-meta text-truncate">{{ e.email }}</div></div>
+          </div>
+        </td>
+        <td><code>{{ e.employee_id }}</code></td>
+        <td>{{ e.position|default:"—" }}</td>
+        <td>{{ e.department|default:"—" }}</td>
+        <td class="small">{{ e.hire_date|date:"d/m/Y" }}<div class="text-body-secondary">{{ e.seniority }}</div></td>
+        {% if user.is_hr %}<td>{% with c=e.current_contract %}{% if c %}<span class="badge bg-secondary-subtle text-secondary-emphasis">{{ c.contract_type }}</span>{% if c.is_expiring_soon %} <i class="bi bi-exclamation-triangle-fill text-warning" title="Fin le {{ c.end_date|date:'d/m/Y' }}"></i>{% endif %}{% else %}<span class="text-body-tertiary small">Aucun</span>{% endif %}{% endwith %}</td>{% endif %}
+        <td>{{ e.status|status_badge:e.get_status_display }}</td>
+        <td class="table-actions">
+          <a class="btn btn-sm btn-outline-secondary" href="{% url 'employees:detail' e.pk %}" title="Voir la fiche"><i class="bi bi-eye"></i></a>
+          {% if user.is_hr %}<a class="btn btn-sm btn-outline-primary" href="{% url 'employees:update' e.pk %}" title="Modifier"><i class="bi bi-pencil"></i></a>{% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8"><div class="empty-state"><i class="bi bi-people"></i>{% if q %}Aucun employé ne correspond à « {{ q }} ».{% else %}Aucun employé pour le moment.{% endif %}</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

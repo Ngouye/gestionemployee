@@ -1,0 +1,25 @@
+{% extends 'core/crud_list.html' %}
+
+{% block table %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead><tr><th>Période</th><th class="text-center">Bulletins</th><th class="text-end">Masse brute</th><th class="text-end">Net à payer</th><th class="text-end">Charges patronales</th><th>Paiement</th><th>Statut</th><th class="text-end"></th></tr></thead>
+    <tbody>
+      {% for p in object_list %}
+      <tr>
+        <td><a class="fw-semibold text-decoration-none" href="{% url 'payroll:period_detail' p.pk %}">{{ p.label }}</a></td>
+        <td class="text-center">{{ p.payslip_count }}</td>
+        <td class="text-end">{{ p.total_gross|money }}</td>
+        <td class="text-end fw-semibold">{{ p.total_net|money }}</td>
+        <td class="text-end">{{ p.total_employer|money }}</td>
+        <td class="small">{{ p.payment_date|date:"d/m/Y"|default:"—" }}</td>
+        <td>{{ p.status|status_badge:p.get_status_display }}</td>
+        <td class="table-actions"><a class="btn btn-sm btn-outline-primary" href="{% url 'payroll:period_detail' p.pk %}">Ouvrir <i class="bi bi-arrow-right"></i></a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8"><div class="empty-state"><i class="bi bi-cash-stack"></i>Aucune période de paie.<div class="mt-2"><a class="btn btn-sm btn-primary" href="{% url 'payroll:period_create' %}">Créer la première période</a></div></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

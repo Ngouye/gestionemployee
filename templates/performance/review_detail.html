@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Évaluation — {{ review.employee }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-clipboard-check"></i> Évaluation de {{ review.employee }}</h1>
+    <p class="page-subtitle">{{ review.cycle }} · évaluateur : {{ review.reviewer.display_name|default:"—" }} · {{ review.status|status_badge:review.get_status_display }}</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    {% if review_form %}
+    <div class="card mb-4">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-pencil-square"></i> Grille d'évaluation</h2></div>
+      <div class="card-body p-4">
+        <form method="post" action="{% url 'performance:review_save' review.pk %}" novalidate>
+          {% csrf_token %}<input type="hidden" name="form" value="review">
+          {% with form=review_form %}{% include 'includes/form_fields.html' %}{% endwith %}
+          <div class="form-actions"><button class="btn btn-primary" type="submit"><i class="bi bi-check-lg"></i> Enregistrer</button></div>
+        </form>
+      </div>
+    </div>
+    {% elif show_ratings %}
+    <div class="card mb-4">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-star"></i> Résultats</h2></div>
+      <div class="card-body">
+        <div class="row g-3 mb-3">
+          {% for label, value in review.criteria %}
+          <div class="col-sm-6"><div class="small text-body-secondary">{{ label|capfirst }}</div><div class="stars">{% if value %}{% for n in "12345" %}{% if forloop.counter <= value %}★{% else %}☆{% endif %}{% endfor %}{% else %}—{% endif %}</div></div>
+          {% endfor %}
+        </div>
+        <div class="p-3 rounded bg-body-tertiary mb-3"><div class="small text-body-secondary">Appréciation globale</div><div class="fs-5 fw-bold">{{ review.get_overall_rating_display|default:"—" }}</div></div>
+        <dl class="kv">
+          <dt>Points forts</dt><dd>{{ review.strengths|default:"—"|linebreaksbr }}</dd>
+          <dt>Axes d'amélioration</dt><dd>{{ review.improvements|default:"—"|linebreaksbr }}</dd>
+          <dt>Objectifs suivants</dt><dd>{{ review.next_goals|default:"—"|linebreaksbr }}</dd>
+          <dt>Commentaire de l'évaluateur</dt><dd>{{ review.reviewer_comments|default:"—"|linebreaksbr }}</dd>
+          <dt>Finalisée le</dt><dd>{{ review.completed_at|date:"d/m/Y"|default:"—" }}</dd>
+        </dl>
+      </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info"><i class="bi bi-hourglass-split"></i> Votre évaluateur n'a pas encore finalisé cette évaluation. Vous pouvez dès maintenant rédiger votre auto-évaluation.</div>
+    {% endif %}
+
+    {% if comment_form %}
+    <div class="card mb-4">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-chat-left-text"></i> Mon commentaire</h2></div>
+      <div class="card-body">
+        <form method="post" action="{% url 'performance:review_save' review.pk %}">
+          {% csrf_token %}<input type="hidden" name="form" value="comment">
+          {% with form=comment_form %}{% include 'includes/form_fields.html' %}{% endwith %}
+          <div class="form-actions"><button class="btn btn-primary" type="submit">Enregistrer</button></div>
+        </form>
+      </div>
+    </div>
+    {% elif review.employee_comments %}
+    <div class="card mb-4"><div class="card-body"><div class="small fw-semibold text-body-secondary mb-1">Commentaire de l'employé</div>{{ review.employee_comments|linebreaksbr }}</div></div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card mb-3">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-person-lines-fill"></i> Auto-évaluation</h2></div>
+      <div class="card-body">
+        {% if self_form %}
+          <form method="post" action="{% url 'performance:review_save' review.pk %}">
+            {% csrf_token %}<input type="hidden" name="form" value="self">
+            {% with form=self_form %}{% include 'includes/form_fields.html' %}{% endwith %}
+            <button class="btn btn-primary w-100 mt-3" type="submit">Enregistrer mon auto-évaluation</button>
+          </form>
+        {% else %}
+          <div class="small">{{ review.self_assessment|default:"Non rédigée."|linebreaksbr }}</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-bullseye"></i> Objectifs</h2></div>
+      <ul class="list-group list-group-flush list-compact">
+        {% for o in objectives %}
+          <li class="list-group-item"><div class="d-flex justify-content-between small"><span class="fw-semibold">{{ o.title }}</span><span>{{ o.progress }} %</span></div>
+            <div class="progress mt-1" style="height:5px" role="progressbar" aria-label="Avancement : {{ o.title }}" aria-valuenow="{{ o.progress }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width: {{ o.progress }}%"></div></div></li>
+        {% empty %}<li class="list-group-item small text-body-secondary">Aucun objectif.</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

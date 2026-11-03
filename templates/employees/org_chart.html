@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Organigramme{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-diagram-3"></i> Organigramme</h1>
+    <p class="page-subtitle">Structure hiérarchique — {{ total }} collaborateur(s) actif(s). Les liens hiérarchiques se définissent dans la fiche de chaque employé (champ « responsable »).</p>
+  </div>
+  <div class="page-actions"><button class="btn btn-outline-secondary" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Imprimer</button></div>
+</div>
+<div class="card">
+  <div class="card-body overflow-auto">
+    {% if tree %}
+    <ul class="org-tree">
+      {% for node in tree %}{% include 'employees/_org_node.html' %}{% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty-state"><i class="bi bi-diagram-3"></i>Aucun employé actif.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

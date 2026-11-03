@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ training.title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav aria-label="Fil d'Ariane"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{% url 'training:list' %}">Formations</a></li><li class="breadcrumb-item active">{{ training.title }}</li></ol></nav>
+    <h1 class="page-title"><i class="bi bi-mortarboard"></i> {{ training.title }} {{ training.status|status_badge:training.get_status_display }}</h1>
+    <p class="page-subtitle">Du {{ training.start_date|date:"d/m/Y" }} au {{ training.end_date|date:"d/m/Y" }} · {{ training.duration_hours }} h · {{ training.get_mode_display }}{% if training.location %} · {{ training.location }}{% endif %}</p>
+  </div>
+  <div class="page-actions"><a class="btn btn-outline-primary" href="{% url 'training:update' training.pk %}"><i class="bi bi-pencil"></i> Modifier</a></div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-people"></i> Participants ({{ training.seats_taken }}{% if training.capacity %} / {{ training.capacity }}{% endif %})</h2>{% if avg_satisfaction %}<span class="small">Satisfaction moyenne : <span class="stars">★</span> {{ avg_satisfaction }} / 5</span>{% endif %}</div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Employé</th><th>Statut</th><th>Avis</th><th class="text-end">Actions</th></tr></thead>
+          <tbody>
+            {% for p in participants %}
+            <tr>
+              <td><span class="fw-semibold">{{ p.employee }}</span><div class="small text-body-secondary">{{ p.employee.department|default:"" }}</div></td>
+              <td>
+                <form method="post" action="{% url 'training:participant_update' p.pk %}" enctype="multipart/form-data" class="d-flex gap-1 align-items-center">
+                  {% csrf_token %}
+                  <select class="form-select form-select-sm" name="status" data-autosubmit aria-label="Statut de {{ p.employee }}">
+                    {% for value, label in statuses %}<option value="{{ value }}" {% if value == p.status %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                  </select>
+                </form>
+              </td>
+              <td class="small">{% if p.satisfaction %}<span class="stars">{% for n in "12345" %}{% if forloop.counter <= p.satisfaction %}★{% else %}☆{% endif %}{% endfor %}</span>{% endif %} {{ p.feedback|truncatechars:60 }}</td>
+              <td class="table-actions">
+                {% if p.certificate %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'training:certificate' p.pk %}" title="Attestation"><i class="bi bi-award"></i></a>{% endif %}
+                <form method="post" action="{% url 'training:participant_remove' p.pk %}" class="d-inline" data-confirm="Retirer {{ p.employee }} de la formation ?">{% csrf_token %}<button class="btn btn-sm btn-outline-danger" type="submit" title="Retirer"><i class="bi bi-person-dash"></i></button></form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4"><div class="empty-state"><i class="bi bi-people"></i>Aucun participant inscrit.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card mb-3">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-person-plus"></i> Inscrire des employés</h2></div>
+      <div class="card-body">
+        <form method="post" action="{% url 'training:enroll' training.pk %}">
+          {% csrf_token %}
+          {% with form=enroll_form %}{% include 'includes/form_fields.html' %}{% endwith %}
+          <div class="form-text">Ctrl + clic pour sélectionner plusieurs personnes.</div>
+          <button class="btn btn-primary w-100 mt-3" type="submit">Inscrire</button>
+        </form>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <dl class="kv">
+          <dt>Thème</dt><dd>{{ training.category|default:"—" }}</dd>
+          <dt>Organisme</dt><dd>{{ training.provider|default:"—" }}</dd>
+          <dt>Formateur</dt><dd>{{ training.trainer|default:"—" }}</dd>
+          <dt>Coût total</dt><dd>{{ training.cost|money }}</dd>
+          <dt>Ouverte aux demandes</dt><dd>{{ training.is_open_for_requests|yesno:"Oui,Non" }}</dd>
+        </dl>
+        {% if training.description %}<hr><div class="small">{{ training.description|linebreaks }}</div>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

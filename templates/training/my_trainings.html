@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes formations{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-mortarboard"></i> Mes formations</h1>
+    <p class="page-subtitle">Vos formations passées et à venir, et le catalogue des sessions ouvertes.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-journal-check"></i> Mon parcours</h2></div>
+      <div class="list-group list-group-flush">
+        {% for p in participations %}
+          <div class="list-group-item">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div>
+                <div class="fw-semibold">{{ p.training }}</div>
+                <div class="small text-body-secondary">{{ p.training.start_date|date:"d/m/Y" }} → {{ p.training.end_date|date:"d/m/Y" }} · {{ p.training.duration_hours }} h · {{ p.training.get_mode_display }}{% if p.training.location %} · {{ p.training.location }}{% endif %}</div>
+              </div>
+              <div class="text-end">{{ p.status|status_badge:p.get_status_display }}
+                {% if p.certificate %}<div><a class="small" href="{% url 'training:certificate' p.pk %}"><i class="bi bi-award"></i> Attestation</a></div>{% endif %}</div>
+            </div>
+            {% if p.status == 'ATTENDED' %}
+              {% if p.satisfaction %}
+                <div class="small mt-2">Votre avis : <span class="stars">{% for n in "12345" %}{% if forloop.counter <= p.satisfaction %}★{% else %}☆{% endif %}{% endfor %}</span> {{ p.feedback }}</div>
+              {% else %}
+                <form method="post" action="{% url 'training:feedback' p.pk %}" class="row g-2 mt-1 align-items-end">
+                  {% csrf_token %}
+                  <div class="col-sm-4"><label class="form-label small" for="sat-{{ p.pk }}">Satisfaction</label>
+                    <select class="form-select form-select-sm" id="sat-{{ p.pk }}" name="satisfaction">{% for n in "54321" %}<option value="{{ n }}">{{ n }} / 5</option>{% endfor %}</select></div>
+                  <div class="col-sm-6"><label class="form-label small" for="fb-{{ p.pk }}">Commentaire</label><input class="form-control form-control-sm" id="fb-{{ p.pk }}" name="feedback" maxlength="500"></div>
+                  <div class="col-sm-2"><button class="btn btn-sm btn-primary w-100" type="submit">Envoyer</button></div>
+                </form>
+              {% endif %}
+            {% endif %}
+          </div>
+        {% empty %}<div class="empty-state"><i class="bi bi-mortarboard"></i>Vous n'avez encore suivi aucune formation.</div>{% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title"><i class="bi bi-collection"></i> Catalogue des sessions à venir</h2></div>
+      <div class="list-group list-group-flush">
+        {% for t in catalog %}
+          <div class="list-group-item d-flex justify-content-between align-items-center gap-2">
+            <div><div class="fw-semibold">{{ t.title }}</div><div class="small text-body-secondary">{{ t.start_date|date:"d/m/Y" }} · {{ t.duration_hours }} h{% if t.category %} · {{ t.category }}{% endif %}</div></div>
+            <form method="post" action="{% url 'training:request' t.pk %}">{% csrf_token %}<button class="btn btn-sm btn-outline-primary text-nowrap" type="submit"{% if t.is_full %} disabled title="Complet"{% endif %}>{% if t.is_full %}Complet{% else %}Je suis intéressé(e){% endif %}</button></form>
+          </div>
+        {% empty %}<div class="empty-state py-4"><i class="bi bi-calendar-x"></i>Aucune session ouverte pour le moment.</div>{% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

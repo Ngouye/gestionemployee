@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes notes de frais{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="bi bi-receipt"></i> Mes notes de frais</h1>
+    <p class="page-subtitle">Déclarez vos dépenses professionnelles et suivez leur remboursement.</p>
+  </div>
+  <div class="page-actions"><a class="btn btn-primary" href="{% url 'expenses:create' %}"><i class="bi bi-plus-lg"></i> Nouvelle note</a></div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4"><div class="card stat-card"><div class="stat-icon tone-warning"><i class="bi bi-hourglass-split"></i></div><div><div class="stat-label">En attente de validation</div><div class="stat-value">{{ totals.submitted|money }}</div></div></div></div>
+  <div class="col-md-4"><div class="card stat-card"><div class="stat-icon tone-info"><i class="bi bi-check2-circle"></i></div><div><div class="stat-label">Approuvées, à rembourser</div><div class="stat-value">{{ totals.approved|money }}</div></div></div></div>
+  <div class="col-md-4"><div class="card stat-card"><div class="stat-icon tone-success"><i class="bi bi-cash-coin"></i></div><div><div class="stat-label">Remboursées cette année</div><div class="stat-value">{{ totals.paid|money }}</div></div></div></div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr><th>Date</th><th>Objet</th><th>Catégorie</th><th class="text-end">Montant</th><th>Justificatif</th><th>Statut</th><th class="text-end"></th></tr></thead>
+      <tbody>
+        {% for c in claims %}
+        <tr>
+          <td class="small">{{ c.expense_date|date:"d/m/Y" }}</td>
+          <td><a class="fw-semibold text-decoration-none" href="{% url 'expenses:detail' c.pk %}">{{ c.title }}</a></td>
+          <td>{{ c.category }}</td>
+          <td class="text-end fw-semibold">{{ c.amount|money }}</td>
+          <td>{% if c.receipt %}<i class="bi bi-paperclip text-success" title="Justificatif joint"></i>{% else %}<span class="text-body-tertiary">—</span>{% endif %}</td>
+          <td>{{ c.status|status_badge:c.get_status_display }}</td>
+          <td class="table-actions"><a class="btn btn-sm btn-outline-secondary" href="{% url 'expenses:detail' c.pk %}"><i class="bi bi-eye"></i></a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="empty-state"><i class="bi bi-receipt"></i>Aucune note de frais.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include 'partials/pagination.html' %}
+</div>
+{% endblock %}
